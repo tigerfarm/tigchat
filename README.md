@@ -1,7 +1,7 @@
 # Tiger Farm Press Chat Application
 
 If you would like an Heroku account to deploy and use this web application,
-go to this [link (https://heroku.com)](https://heroku.com) and you can Sign up for free, and use it for free.
+go to this [link](https://heroku.com)](https://heroku.com) and you can Sign up for free, and use it for free.
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/tigerfarm/tigchat)
 
