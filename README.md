@@ -23,7 +23,7 @@ Key value pairs not required or used at this time:
 
 Tiger Farm Press Chat Screen print:
 
-<img src="ChatClient.jpg"/>
+<img src="ChatClient.jpg" width="600"/>
 
 ### Requirements:
 
