@@ -202,30 +202,36 @@ function sayRequirement(message) {
 }
 
 // -----------------------------------------------------------------------------
-function generateToken(clientid) {
+function generateToken(theIdentity) {
     //
-    // Optional, if you want to use environment variables.
+    // Generate a chat token using environment variables.
     //
-    if (userIdentity === "") {
-        sayRequirement("Required: user identity for creating a chat object.");
+    // Documentation: https://www.twilio.com/docs/api/rest/access-tokens
+    //
+    if (theIdentity === "") {
+        sayRequirement("Required: user identity for creating a chat token.");
         doPrompt();
         return "";
     }
-    sayMessage("+ Generate token, Client ID: " + clientid);
+    sayMessage("+ Generate token, chat user ID: " + theIdentity);
     const AccessToken = require('twilio').jwt.AccessToken;
+    // Create an API key and secret string: https://www.twilio.com/console/chat/runtime/api-keys
     const token = new AccessToken(
             ACCOUNT_SID,
             CHAT_API_KEY,
             CHAT_API_KEY_SECRET
             );
+    // Create a Chat service: https://www.twilio.com/console/chat/services
     const chatGrant = new AccessToken.ChatGrant({
-        serviceSid: CHAT_SERVICE_SID
+        serviceSid: CHAT_SERVICE_SID        // Begins with 'IS'
     });
     token.addGrant(chatGrant);
-    token.identity = clientid;
-    sayMessage("++ Token generated.");
-    debugMessage("Token: " + token.toJwt());
-    return token.toJwt();
+    token.identity = theIdentity;
+    //
+    // Output the token.
+    theToken = token.toJwt();
+    debugMessage("+ theToken " + theToken);
+    return(theToken);
 }
 
 function getTokenSeverSideSetClientObject(clientid) {
@@ -760,35 +766,6 @@ function sayMessage(message) {
     console.log(message);
 }
 
-function generateTokenChat( theIdentity ) {
-    // Documentation: https://www.twilio.com/docs/api/rest/access-tokens
-    //
-    if (theIdentity === "") {
-        sayRequirement("Required: user identity for creating a chat token.");
-        doPrompt();
-        return "";
-    }
-    sayMessage("+ Generate token, chat user ID: " + theIdentity);
-    const AccessToken = require('twilio').jwt.AccessToken;
-    // Create an API key and secret string: https://www.twilio.com/console/chat/runtime/api-keys
-    const token = new AccessToken(
-            ACCOUNT_SID,
-            CHAT_API_KEY,
-            CHAT_API_KEY_SECRET
-            );
-    // Create a Chat service: https://www.twilio.com/console/chat/services
-    const chatGrant = new AccessToken.ChatGrant({
-        serviceSid: CHAT_SERVICE_SID        // Begins with 'IS'
-    });
-    token.addGrant(chatGrant);
-    token.identity = theIdentity;
-    //
-    // Output the token.
-    theToken = token.toJwt();
-    debugMessage("+ theToken " + theToken);
-    return(theToken);
-}
-
 // -----------------------------------------------------------------------------
 // Web server interface to call functions.
 // 
@@ -904,7 +881,7 @@ app.get('/exit', function (req, res) {
 app.get('/clientTokenGet.php', function (req, res) {
     sayMessage("+ Generate Chat Token.");
     if (req.query.identity) {
-        res.send(generateTokenChat( req.query.identity ));
+        res.send(generateToken( req.query.identity ));
     } else {
         sayMessage("- Parameter required: identity.");
         res.send(0);
