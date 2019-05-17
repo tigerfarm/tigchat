@@ -66,12 +66,15 @@ $ export CHAT_SERVICE_SID ISxxx...xxx
 $ export CHAT_API_KEY SKxxx...xxx
 $ export CHAT_API_KEY_SECRET xxx...xxx
 ````
-Run the Node.JS server program, install the required packages, then run the chat server.
+Run the Node.JS server program, install the required packages, then run the chat server or command line program.
 ````
 $ npm install twilio
 $ npm install twilio-chat
 $ npm install express
+
 $ node chatserver.js
+
+$ node chatcli.js
 ````
 ### Test
 ````
