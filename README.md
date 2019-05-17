@@ -1,7 +1,8 @@
 # Tiger Farm Press Chat Application
 
-If you would like an Heroku account to deploy and use this web application,
-go to this [link](https://heroku.com)](https://heroku.com) and you can Sign up for free, and use it for free.
+This application is ready to run.
+To deploy to Heroku, you will need an [Heroku account](https://heroku.com/) to host your application.
+Once you have an account, stay logged in for the deployment and configuration.
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/tigerfarm/tigchat)
 
@@ -19,7 +20,6 @@ Add the following key value pairs:
 Key value pairs not required or used at this time:
 - AUTH_TOKEN : your Twilio account auth token (Available from Twilio Console, click view)
 - TOKEN_PASSWORD : your token password (Password is required to create tokens. The password can be any string you want to use.)
-
 
 Tiger Farm Press Chat Screen print:
 
