@@ -21,7 +21,7 @@ Key value pairs not required or used at this time:
 - AUTH_TOKEN : your Twilio account auth token (Available from Twilio Console, click view)
 - TOKEN_PASSWORD : your token password (Password is required to create tokens. The password can be any string you want to use.)
 
-Tiger Farm Press Chat Screen print:
+Chat Client Application screen print:
 
 <img src="ChatClient.jpg" width="400"/>
 
@@ -66,8 +66,11 @@ $ export CHAT_SERVICE_SID ISxxx...xxx
 $ export CHAT_API_KEY SKxxx...xxx
 $ export CHAT_API_KEY_SECRET xxx...xxx
 ````
-Run the Node.JS server program:
+Run the Node.JS server program, install the required packages, then run the chat server.
 ````
+$ npm install twilio
+$ npm install twilio-chat
+$ npm install express
 $ node chatserver.js
 ````
 ### Test
