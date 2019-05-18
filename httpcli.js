@@ -1,6 +1,8 @@
 // -----------------------------------------------------------------------------
 console.log("+++ Start.");
 
+var request = require('request');
+
 // -----------------------------------------------------------------------------
 function doHelp() {
     sayMessage("------------------------------------------------------------------------------\n\
@@ -11,6 +13,7 @@ Commands:\n\
 > exit");
     sayBar();
     syntaxHttp();
+    sayMessage("");
     syntaxSet();
     sayBar();
 }
@@ -45,34 +48,12 @@ function setDebug(value) {
     }
 }
 
-function syntaxSet() {
-    sayMessage("> set <debug> <on|off>");
-}
-function doSet(theCommand) {
-    commandLength = theCommand.length;
-    commandWordLength = 'set'.length + 1;
-    if (commandLength > commandWordLength) {
-        attribute = theCommand.substring(commandWordLength, commandLength);
-        value = "";
-        ew = theCommand.indexOf(" ", commandWordLength + 1);
-        if (ew > 1) {
-            attribute = theCommand.substring(commandWordLength, ew).trim();
-            value = theCommand.substring(ew, commandLength).trim();
-            debugMessage("attribute :" + attribute + ": value :" + value + ":");
-            if (attribute === "debug") {
-                setDebug(value);
-                return;
-            }
-        }
-    }
-    syntaxSet();
-}
-
+// -----------------------------------------------------------------------------
 var attribute = "";
 var value = "";
-function parseAttributeValue(theCommand) {
+function parseAttributeValue(theType, theCommand) {
     commandLength = theCommand.length;
-    commandWordLength = 'set'.length + 1;
+    commandWordLength = theType.length + 1;
     if (commandLength > commandWordLength) {
         attribute = theCommand.substring(commandWordLength, commandLength);
         value = "";
@@ -86,15 +67,47 @@ function parseAttributeValue(theCommand) {
     }
     return(0);
 }
+function parseValue(theType, theCommand) {
+    commandLength = theCommand.length;
+    commandWordLength = theType.length + 1;
+    if (commandLength > commandWordLength) {
+        value = theCommand.substring(commandWordLength, commandLength);
+        return(1);
+    }
+    return(0);
+}
+
+function syntaxSet() {
+    sayMessage("> set <debug> <on|off>");
+}
+function doSet(theCommand) {
+    if (parseAttributeValue("set", theCommand) === 1) {
+        setDebug(value);
+    } else {
+        syntaxSet();
+    }
+}
 
 function syntaxHttp() {
-    sayMessage("> http <get|post> <url>");
+    sayMessage("> http <url> : Assume HTTP GET.");
+    sayMessage("> http [<get|post>] <url>");
 }
 function doHttp(theCommand) {
-    if (parseAttributeValue(theCommand) === 1) {
+    if (parseAttributeValue("http", theCommand) === 1) {
         sayMessage("+ http :" + attribute + ": value :" + value + ":");
     } else {
-        syntaxHttp();
+        if (parseValue("http", theCommand) === 1) {
+            sayMessage("+ http value :" + value + ":");
+            attribute = "get";
+        } else {
+            syntaxHttp();
+            return;
+        }
+    }
+    if (attribute === "get") {
+        httpGet(value);
+    } else {
+        sayMessage("+ Note implemented: " + attribute);
     }
 }
 
@@ -107,6 +120,33 @@ function doShow() {
         sayMessage("++ Debug: on");
     }
     sayBar();
+}
+
+// -----------------------------------------------------------------------------
+var httpHost = "localhost:8000";
+function httpGet(theUri) {
+    theUrl = "http://" + httpHost;
+    if (theUri !== "") {
+        theUrl = theUrl + "/" + theUri;
+    }
+    debugMessage("theUrl :" + theUrl + ":");
+    request(theUrl, function (error, response, theResponse) {
+        if (error) {
+            // Print the error if one occurred
+            sayMessage('error:', error);
+            return;
+        }
+        if (response && response.statusCode !== 200) {
+            sayMessage('- Status code:', response && response.statusCode);
+            return;
+        }
+        if (theUri !== "show") {
+            sayMessage(theResponse);
+        } else {
+            sayMessage(theResponse.replace(/<br>/g, '\n'));
+        }
+        doPrompt();
+    });
 }
 
 // -----------------------------------------------------------------------------
