@@ -12,7 +12,7 @@
   "dependencies": {
     "express": "^4.15.2",
     "twilio": "^3.31.0",
-    "twilio-chat": "^3.2.3"
+    "twilio-chat": "^2.0.1"
   },
   "repository": {
     "type": "git",
