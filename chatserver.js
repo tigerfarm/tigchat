@@ -222,10 +222,10 @@ function generateToken(theIdentity) {
             CHAT_API_KEY_SECRET
             );
     // Create a Chat service: https://www.twilio.com/console/chat/services
-    const chatGrant = new AccessToken.ChatGrant({
-        serviceSid: CHAT_SERVICE_SID        // Begins with 'IS'
+    const ipmGrant = new IpMessagingGrant({
+        serviceSid: CHAT_SERVICE_SID       // Begins with 'IS'
     });
-    token.addGrant(chatGrant);
+    token.addGrant(ipmGrant);
     token.identity = theIdentity;
     //
     // Output the token.
@@ -881,7 +881,7 @@ app.get('/exit', function (req, res) {
 app.get('/clientTokenGet.php', function (req, res) {
     sayMessage("+ Generate Chat Token.");
     if (req.query.identity) {
-        res.send(generateToken( req.query.identity ));
+        res.send(generateToken(req.query.identity));
     } else {
         sayMessage("- Parameter required: identity.");
         res.send(0);
