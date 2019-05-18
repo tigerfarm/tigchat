@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "express": "^4.15.2",
-    "twilio": "latest",
-    "twilio-chat": "latest"
+    "twilio": "^3.31.0",
+    "twilio-chat": "^3.0.2"
   },
   "repository": {
     "type": "git",
