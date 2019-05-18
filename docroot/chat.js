@@ -38,7 +38,7 @@ function createChatClient() {
         thisToken = token;
         logger("Token refreshed: " + thisToken);
         // -------------------------------
-        twilio.Chat.Client.create(thisToken).then(chatClient => {
+        Twilio.Chat.Client.create(thisToken).then(chatClient => {
             logger("Chat client created: thisChatClient: " + thisChatClient);
             thisChatClient = chatClient;
             addChatMessage("+ Chat client created for the user: " + clientId);
