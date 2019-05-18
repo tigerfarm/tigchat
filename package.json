@@ -5,7 +5,7 @@
   "engines": {
     "node": "10.x"
   },
-  "main": "server.js",
+  "main": "chatserver.js",
   "scripts": {
     "start": "node chatserver.js"
   },

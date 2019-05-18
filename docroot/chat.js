@@ -15,6 +15,9 @@ clientId = "";
 chatChannelName = "";
 chatChannelDescription = "";
 
+// const Twilio = require('twilio');
+// const Chat = require('twilio-chat');
+
 // -----------------------------------------------------------------------------
 function createChatClient() {
     clientId = $("#username").val();
@@ -35,17 +38,16 @@ function createChatClient() {
         thisToken = token;
         logger("Token refreshed: " + thisToken);
         // -------------------------------
-        // I would need to make change to get this to work: thisChatClient = new Twilio.Chat.Client.create(token);
-        Twilio.Chat.Client.create(token).then(chatClient => {
-            thisChatClient = chatClient;
+        Twilio.Chat.Client.create(thisToken).then(chatClient => {
             logger("Chat client created: thisChatClient: " + thisChatClient);
+            thisChatClient = chatClient;
             addChatMessage("+ Chat client created for the user: " + clientId);
             thisChatClient.getSubscribedChannels();
             // thisChatClient.getSubscribedChannels().then(joinChatChannel);
             setButtons("createChatClient");
         });
     }).fail(function () {
-        logger("- Error refreshing the token.");
+        logger("- Error refreshing the token and creating the chat client oject.");
     });
 }
 
