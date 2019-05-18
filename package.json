@@ -1,13 +1,13 @@
 {
-  "name": "nodeexpress",
-  "version": "0.1.0",
-  "description": "Sample Node.js Express web server",
+  "name": "chatapp",
+  "version": "1.2.0",
+  "description": "Node.js Express Chat web application",
   "engines": {
     "node": "10.x"
   },
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node chatserver.js"
   },
   "dependencies": {
     "express": "^4.15.2",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/heroku/tigne"
+    "url": "https://github.com/heroku/tigchat"
   },
   "keywords": [
     "node",
