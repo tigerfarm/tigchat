@@ -19,10 +19,11 @@
     "url": "https://github.com/heroku/tigchat"
   },
   "keywords": [
-    "node",
     "twilio",
-    "heroku",
-    "express"
+    "chat",
+    "node",
+    "express",
+    "heroku"
   ],
   "license": "MIT"
 }
