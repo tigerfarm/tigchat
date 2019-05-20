@@ -38,6 +38,8 @@ function createChatClient() {
         thisToken = token;
         logger("Token refreshed: " + thisToken);
         // -------------------------------
+        // https://www.twilio.com/docs/chat/initializing-sdk-clients#javascript_1
+        // https://www.twilio.com/docs/chat/tutorials/chat-application-node-express#initialize-the-programmable-chat-client
         Twilio.Chat.Client.create(thisToken).then(chatClient => {
             logger("Chat client created: thisChatClient: " + thisChatClient);
             thisChatClient = chatClient;
