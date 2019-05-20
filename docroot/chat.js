@@ -47,7 +47,7 @@ function createChatClient() {
             setButtons("createChatClient");
         });
     }).fail(function () {
-        logger("- Error refreshing the token and creating the chat client oject.");
+        logger("- Error refreshing the token and creating the chat client object.");
     });
 }
 
