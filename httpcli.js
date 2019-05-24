@@ -5,17 +5,16 @@ var request = require('request');
 
 // -----------------------------------------------------------------------------
 function doHelp() {
-    sayMessage("------------------------------------------------------------------------------\n\
-Commands:\n\
-\n\
-> show : Show settings.\n\
-> clear : clear the console window.\n\
-> help\n\
-> exit");
-    sayBar();
+    sayMessage("------------------------------------------------------------------------------");
+    sayMessage("Commands:\n");
     syntaxHttp();
     sayMessage("");
     syntaxSet();
+    sayBar();
+    sayMessage("> show : Show settings.\n\
+> clear : clear the console window.\n\
+> help\n\
+> exit");
     sayBar();
 }
 function sayBar() {
@@ -80,6 +79,8 @@ function parseValue(theType, theCommand) {
 
 function syntaxSet() {
     sayMessage("> set <host> <name>");
+    sayMessage("+ Twilio test host: https://api.twilio.com:8443/");
+    sayMessage("+ Other hosts: http://localhost:8000/ http://tigerfarmpress.com");
     sayMessage("> set <debug> <on|off>");
 }
 function doSet(theCommand) {
@@ -164,8 +165,10 @@ function httpGet(theUri) {
     }
     requestGet(theUri, theUrl);
 }
+
 function requestGet(theUri, theUrl) {
     debugMessage("theUrl :" + theUrl + ":");
+//    request(theUrl, "secureProtocol: 'SSLv3_method'", function (error, response, theResponse) {
     request(theUrl, function (error, response, theResponse) {
         if (error) {
             // Print the error if one occurred
@@ -194,14 +197,32 @@ function requestGet(theUri, theUrl) {
             doPrompt();
             return;
         }
+        sayBar();
+        sayMessage('+ Response code: ' + response.statusCode + ', URL: ' + theUrl);
+        sayMessage(response.headers);
+        sayMessage('');
         if (theUri !== "show") {
-            sayMessage('+ Response code: ' + response.statusCode + ' ' + theUrl + '\n' + theResponse);
+            sayMessage(theResponse);
         } else {
             sayMessage(theResponse.replace(/<br>/g, '\n'));
         }
+        sayBar();
         doPrompt();
     });
 }
+
+function requestGet(theUri, theUrl) {
+    // Future.
+    let options = {
+        url: 'http://http://mockbin.com/request',
+        form: {
+            email: 'me@example.com',
+            password: 'myPassword'
+        }
+    };
+    request.post(options, callback);
+}
+
 
 // -----------------------------------------------------------------------------
 doPrompt();
