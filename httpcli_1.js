@@ -85,16 +85,7 @@ function syntaxSet() {
 function doSet(theCommand) {
     if (parseAttributeValue("set", theCommand) === 1) {
         if (attribute === "host") {
-            if (!value.endsWith('/')) {
-                value = value + '/';
-            }
-            if (value.startsWith('http')) {
-                httpHost = value;
-            } else {
-                httpDefault = 'https://';
-                httpHost = httpDefault + value;
-                sayMessage("+ Using HTTPS as default: " + httpHost);
-            }
+            httpHost = value;
         } else if (attribute === "debug") {
             setDebug(value);
         } else {
@@ -107,12 +98,21 @@ function doSet(theCommand) {
 }
 
 function syntaxHttp() {
-    sayMessage("+ Send an HTTP/HTTPS request to the currently set host name.");
+    sayMessage("+ Send an HTTP request to the currently set host name.");
     sayMessage("> http <uri> : Assume HTTP GET.");
     sayMessage("> http get <uri>");
     // sayMessage("> http [<get|post>] <uri>");
 }
+function syntaxHttps() {
+    sayMessage("+ Send an HTTPS request to the currently set host name.");
+    sayMessage("> https <uri> : Assume HTTPS GET.");
+    sayMessage("> https <get <uri>");
+}
 function doHttp(theCommand) {
+    if (theCommand.startsWith('https')) {
+        doHttps(theCommand);
+        return;
+    }
     if (parseAttributeValue("http", theCommand) === 1) {
         sayMessage("+ http :" + attribute + ": value :" + value + ":");
     } else {
@@ -127,6 +127,26 @@ function doHttp(theCommand) {
     }
     if (attribute === "get") {
         httpGet(value);
+        return;
+    }
+    sayMessage("+ Not implemented: " + attribute);
+    doPrompt();
+}
+function doHttps(theCommand) {
+    if (parseAttributeValue("https", theCommand) === 1) {
+        sayMessage("+ https :" + attribute + ": value :" + value + ":");
+    } else {
+        if (parseValue("https", theCommand) === 1) {
+            debugMessage("https value :" + value + ":");
+            attribute = "get";
+        } else {
+            syntaxHttps();
+            doPrompt();
+            return;
+        }
+    }
+    if (attribute === "get") {
+        httpsGet(value);
         return;
     }
     sayMessage("+ Not implemented: " + attribute);
@@ -152,24 +172,12 @@ function clearScreen() {
 }
 
 // -----------------------------------------------------------------------------
-
-var httpHost = "http://localhost:8000/";    // default.
-function httpGet(theUri) {
-    if (theUri !== "") {
-        if (theUri.startsWith('/')) {
-            theUrl = httpHost + theUri.substring(1);
-        } else {
-            theUrl = httpHost + theUri;
-        }
-    }
-    requestGet(theUri, theUrl);
-}
 function requestGet(theUri, theUrl) {
     debugMessage("theUrl :" + theUrl + ":");
     request(theUrl, function (error, response, theResponse) {
         if (error) {
             // Print the error if one occurred
-            sayMessage('- Error connecting.');
+            sayMessage('error:', error.);
             doPrompt();
             return;
         }
@@ -190,17 +198,33 @@ function requestGet(theUri, theUrl) {
             } else if (response.toString().startsWith('5')) {
                 errorMessage = ": Server Error.";
             }
-            sayMessage('- Status code: ' + response.statusCode + errorMessage + ' ' + theUrl);
+            sayMessage('- Status code: ' + response.statusCode + errorMessage);
             doPrompt();
             return;
         }
         if (theUri !== "show") {
-            sayMessage('+ Response code: ' + response.statusCode + ' ' + theUrl + '\n' + theResponse);
+            sayMessage('+ Response code: ' + response.statusCode + '\n' + theResponse);
         } else {
             sayMessage(theResponse.replace(/<br>/g, '\n'));
         }
         doPrompt();
     });
+}
+
+var httpHost = "localhost:8000";    // default.
+function httpGet(theUri) {
+    theUrl = "http://" + httpHost;
+    if (theUri !== "") {
+        theUrl = theUrl + "/" + theUri;
+    }
+    requestGet(theUri, theUrl);
+}
+function httpsGet(theUri) {
+    theUrl = "https://" + httpHost;
+    if (theUri !== "") {
+        theUrl = theUrl + "/" + theUri;
+    }
+    requestGet(theUri, theUrl);
 }
 
 // -----------------------------------------------------------------------------

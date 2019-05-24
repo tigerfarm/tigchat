@@ -1,4 +1,4 @@
-# Tiger Farm Press Chat Application
+# Chat Web Application
 
 This application is ready to run.
 To deploy to Heroku, you will need an [Heroku account](https://heroku.com/) to host your application.
@@ -37,6 +37,7 @@ Chat Client Application screen print:
 - [chat.js](chat.js) : Chat client JavaScript
 - [chatserver.js](chatserver.js) : a NodeJS Express HTTP Server that serves the Chat client files.
 - [chatcli.js](chatcli.js) : a standalone NodeJS command line chat program.
+- [httpcli.js](httpcli.js) : a standalone command line program for making HTTP GET requests.
 - [app.json](app.json) : Heroku deployment file to describe the application.
 - [package.json](package.json) : Heroku deployment file which sets the programming language used.
 
@@ -90,5 +91,28 @@ Enter a Channel name, example: mychannel (same as the other client).
 
 Send messages between your clients.
 ````
+## SMS Twilio Chat Gateway
+
+I’ve done some more work on my SMS Chat gateway. I do see the issue you asked me about, which is,
+
+How is a person using SMS, to interact with a Twilio Chatter?
+
+````
+A Twilio phone number is used as Chat channel name.
+Chat users join the channel using a text string identity such as, "david".
+SMS users join the channel using their mobile phone number as their Chat identity.
+A Chat user sends a message to the Twilio phone number Chat channel.
+   The Chat users receive the message as normal.
+   The SMS user receives the chat message as an SMS message,
+      with the message prefixed with Chat identity of sender.
+Example,
+a person with identity, david, would send a chat message, "Hello to all."
+The SMS person would receive the following text: "david: Hello to all."
+The SMS person sends a text to the Twilio phone number.
+The message is relayed as Chat message on the Chat channel, from the Identity as the person's mobile phone number.
+````
+An alternative is to have 1 to 1 interactions between an person using SMS and a person using Chat.
+The person using Chat, would use the Twilio phone number as their Chat identity and join a channel named as the Twilio phone number.
+Only the two can chat.
 
 Cheers...

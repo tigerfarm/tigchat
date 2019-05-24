@@ -41,6 +41,8 @@ function createChatClient() {
         // https://www.twilio.com/docs/chat/initializing-sdk-clients#javascript_1
         // https://www.twilio.com/docs/chat/tutorials/chat-application-node-express#initialize-the-programmable-chat-client
         // With V2: Chat E: Failed to create session Error: "Invalid Access Token grants"
+        // With V2: Unhandled promise rejection Error: "Invalid Access Token grants"
+        // With V3: Unhandled promise rejection Error: "Can't connect to twilsock"
         Twilio.Chat.Client.create(thisToken).then(chatClient => {
             logger("Chat client created: thisChatClient: " + thisChatClient);
             thisChatClient = chatClient;
