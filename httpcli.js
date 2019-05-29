@@ -129,6 +129,8 @@ function doHttp(theCommand) {
     if (attribute === "get") {
         httpGet(value);
         return;
+    } else if (attribute === "post") {
+        httpPost(value);
     }
     sayMessage("+ Not implemented: " + attribute);
     doPrompt();
@@ -211,16 +213,75 @@ function requestGet(theUri, theUrl) {
     });
 }
 
-function requestGet(theUri, theUrl) {
+function httpPost(theUri) {
+    if (theUri !== "") {
+        if (theUri.startsWith('/')) {
+            theUrl = httpHost + theUri.substring(1);
+        } else {
+            theUrl = httpHost + theUri;
+        }
+    }
+    requestPost(theUri, theUrl);
+}
+function requestPost(theUri, theUrl) {
     // Future.
+    // set host https://tigauthy.herokuapp.com/
+    // http post /registration
+    // 
+    // set host http://tigerfarmpress.com/cgi/
+    // http echo.php?hello=there
+    // set host http://tigerfarmpress.com/cgi/echo.php
+    // https://api.authy.com
+    //
+    sayMessage("+ POST theUrl :" + theUrl + ":");
     let options = {
-        url: 'http://http://mockbin.com/request',
+        url: theUrl,
         form: {
-            email: 'me@example.com',
-            password: 'myPassword'
+            authy_id: 40023285
         }
     };
-    request.post(options, callback);
+    request.post(options, function (error, response, theResponse) {
+        if (error) {
+            // Print the error if one occurred
+            sayMessage('- Error connecting.');
+            doPrompt();
+            return;
+        }
+        if (!response.statusCode.toString().startsWith('2')) {
+            var errorMessage = '';
+            if (response.statusCode.toString().startsWith('1')) {
+                errorMessage = ": Informational.";
+            } else if (response.toString().startsWith('3')) {
+                errorMessage = ": Redirectory.";
+            } else if (response.statusCode === 400) {
+                errorMessage = ": Bad request.";
+            } else if (response.statusCode === 401) {
+                errorMessage = ": Unauthorized.";
+            } else if (response.statusCode === 403) {
+                errorMessage = ": Forbidden.";
+            } else if (response.statusCode === 404) {
+                errorMessage = ": Not found.";
+            } else if (response.toString().startsWith('4')) {
+                errorMessage = ": Client error.";
+            } else if (response.toString().startsWith('5')) {
+                errorMessage = ": Server Error.";
+            }
+            sayMessage('- Status code: ' + response.statusCode + errorMessage + ' ' + theUrl);
+            doPrompt();
+            return;
+        }
+        sayBar();
+        sayMessage('+ Response code: ' + response.statusCode + ', URL: ' + theUrl);
+        sayMessage(response.headers);
+        sayMessage('');
+        if (theUri !== "show") {
+            sayMessage(theResponse);
+        } else {
+            sayMessage(theResponse.replace(/<br>/g, '\n'));
+        }
+        sayBar();
+        doPrompt();
+    });
 }
 
 
