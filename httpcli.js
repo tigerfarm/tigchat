@@ -131,6 +131,7 @@ function doHttp(theCommand) {
         return;
     } else if (attribute === "post") {
         httpPost(value);
+        return;
     }
     sayMessage("+ Not implemented: " + attribute);
     doPrompt();
@@ -225,6 +226,10 @@ function httpPost(theUri) {
 }
 function requestPost(theUri, theUrl) {
     // Future.
+    // 
+    // set host http://localhost:8000/
+    // http post registration
+    // 
     // set host https://tigauthy.herokuapp.com/
     // http post /registration
     // 
@@ -232,12 +237,21 @@ function requestPost(theUri, theUrl) {
     // http echo.php?hello=there
     // set host http://tigerfarmpress.com/cgi/echo.php
     // https://api.authy.com
+    // 
+    // set host https://api.authy.com/protected/json/sdk/
+    // http post registrations
     //
     sayMessage("+ POST theUrl :" + theUrl + ":");
+    sayMessage("+ api_key :" + process.env.AUTHY_API_KEY_TF + ":");
+    sayMessage("+ authy_id :" + process.env.AUTHY_ID + ":");
     let options = {
         url: theUrl,
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
         form: {
-            authy_id: 40023285
+            api_key: process.env.AUTHY_API_KEY_TF,
+            authy_id: process.env.AUTHY_ID
         }
     };
     request.post(options, function (error, response, theResponse) {
@@ -251,8 +265,10 @@ function requestPost(theUri, theUrl) {
             var errorMessage = '';
             if (response.statusCode.toString().startsWith('1')) {
                 errorMessage = ": Informational.";
+            } else if (response.statusCode === 307) {
+                errorMessage = ": Temporary Redirect.";
             } else if (response.toString().startsWith('3')) {
-                errorMessage = ": Redirectory.";
+                errorMessage = ": Redirect.";
             } else if (response.statusCode === 400) {
                 errorMessage = ": Bad request.";
             } else if (response.statusCode === 401) {
@@ -266,12 +282,11 @@ function requestPost(theUri, theUrl) {
             } else if (response.toString().startsWith('5')) {
                 errorMessage = ": Server Error.";
             }
-            sayMessage('- Status code: ' + response.statusCode + errorMessage + ' ' + theUrl);
-            doPrompt();
-            return;
+            sayMessage('- Status code: ' + response.statusCode + errorMessage);
+        } else {
+            sayBar();
+            sayMessage('+ Response code: ' + response.statusCode + ', URL: ' + theUrl);
         }
-        sayBar();
-        sayMessage('+ Response code: ' + response.statusCode + ', URL: ' + theUrl);
         sayMessage(response.headers);
         sayMessage('');
         if (theUri !== "show") {
