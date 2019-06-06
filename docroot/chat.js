@@ -52,9 +52,10 @@ function createChatClient() {
             //
             // Documentation:
             //   https://www.twilio.com/docs/chat/tutorials/chat-application-node-express?code-sample=code-initialize-the-chat-client-9&code-language=Node.js&code-sdk-version=default
-            // thisChatClient.messagingClient.on('channelAdded', $.throttle(tc.loadChannelList));
-            // thisChatClient.messagingClient.on('channelRemoved', $.throttle(tc.loadChannelList));
-            thisChatClient.messagingClient.on('tokenExpired', onTokenExpiring);
+            // thisChatClient.on('channelAdded', $.throttle(tc.loadChannelList));
+            // thisChatClient.on('channelRemoved', $.throttle(tc.loadChannelList));
+            // thisChatClient.on('tokenExpired', onTokenExpiring);
+            thisChatClient.on('tokenAboutToExpire', onTokenAboutToExpire);
             //
         });
     }).fail(function () {
@@ -62,7 +63,7 @@ function createChatClient() {
     });
 }
 
-function onTokenExpiring() {
+function onTokenAboutToExpire() {
     logger("onTokenExpiring: Refresh the token using client id: " + clientId);
     var jqxhr = $.get("generateToken?identity=" + clientId, function (token) {
         if (token === "0") {
@@ -73,7 +74,7 @@ function onTokenExpiring() {
         logger("Token update: " + thisToken);
         // -------------------------------
         // https://www.twilio.com/docs/chat/access-token-lifecycle
-        thisChatClient.updateToken(thisToken);
+        thisChatClient.Client.updateToken(thisToken);
     }).fail(function () {
         logger("- onTokenExpiring: Error refreshing the token and creating the chat client object.");
     });

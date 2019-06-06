@@ -17,9 +17,6 @@ Add the following key value pairs:
 - CHAT_SERVICE_SID : your Chat service SID
 - CHAT_API_KEY : your Chat API key
 - CHAT_API_KEY_SECRET : your Chat API key secret
-Key value pairs not required or used at this time:
-- AUTH_TOKEN : your Twilio account auth token (Available from Twilio Console, click view)
-- TOKEN_PASSWORD : your token password (Password is required to create tokens. The password can be any string you want to use.)
 
 Chat Client Application screen print:
 
