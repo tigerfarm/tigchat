@@ -72,7 +72,7 @@ $ npm install twilio-chat
 $ npm install express
 
 $ node chatserver.js
-
+-- or --
 $ node chatcli.js
 ````
 ### Test
