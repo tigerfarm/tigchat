@@ -75,7 +75,7 @@ $ node chatserver.js
 -- or --
 $ node chatcli.js
 ````
-### Test
+### Test the Chat Web Server
 ````
 Use your browser to run the chat client:
 http://localhost:8000
@@ -91,25 +91,31 @@ Send messages between your clients.
 ````
 ## SMS Twilio Chat Gateway
 
-I’ve done some more work on my SMS Chat gateway. I do see the issue you asked me about, which is,
+The following is my notes regarding a gateway between Chat and SMS.
 
-How is a person using SMS, to interact with a Twilio Chatter?
+A design question, "How is a person using SMS, to interact with a Twilio Chatter?"
 
 ````
 A Twilio phone number is used as Chat channel name.
 Chat users join the channel using a text string identity such as, "david".
-SMS users join the channel using their mobile phone number as their Chat identity.
+The SMS user joins the channel using their mobile phone number as their Chat identity.
 A Chat user sends a message to the Twilio phone number Chat channel.
-   The Chat users receive the message as normal.
    The SMS user receives the chat message as an SMS message,
       with the message prefixed with Chat identity of sender.
-Example,
-a person with identity, david, would send a chat message, "Hello to all."
+   The Chat users receive the message as normal.
+The SMS Chat user sends a message to the Twilio phone number Chat channel.
+   The Chat users receive the message as normal, where the SMS Chat user's identity is their phone number.
+
+Example of a Chat person sending a message to an SMS person:
+A person with identity, "david", join the Chat channel that is the SMS person's phone number.
+"david" would send a chat message, "Hello to all."
 The SMS person would receive the following text: "david: Hello to all."
-The SMS person sends a text to the Twilio phone number.
+
+Example of an SMS person sending a message to a Chat person:
+The SMS person sends a text to the Twilio phone number that is webhook'ed to the Chat web server gateway program.
 The message is relayed as Chat message on the Chat channel, from the Identity as the person's mobile phone number.
 ````
-An alternative is to have 1 to 1 interactions between an person using SMS and a person using Chat.
+An alternative is to have 1 to 1 interactions between a person using SMS and a person using Chat.
 The person using Chat, would use the Twilio phone number as their Chat identity and join a channel named as the Twilio phone number.
 Only the two can chat.
 
