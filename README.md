@@ -29,12 +29,13 @@ Chat Client Application screen print:
 
 ## Files
 
-- [index.html](index.html) : Chat client HTML
-- [chat.css](chat.css) : Chat client styles, CSS
-- [chat.js](chat.js) : Chat client JavaScript
+- [docroot/index.html](docroot/index.html) : Chat client HTML
+- [docroot/chat.js](docroot/chat.js) : Chat client JavaScript
+- [docroot/custom/chat.css](docroot/custom/chat.css) : Chat client styles, CSS
+
 - [chatserver.js](chatserver.js) : a NodeJS Express HTTP Server that serves the Chat client files.
 - [chatcli.js](chatcli.js) : a standalone NodeJS command line chat program.
-- [httpcli.js](httpcli.js) : a standalone command line program for making HTTP GET requests.
+
 - [app.json](app.json) : Heroku deployment file to describe the application.
 - [package.json](package.json) : Heroku deployment file which sets the programming language used.
 
