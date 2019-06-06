@@ -9,12 +9,11 @@
 let thisChatClient = "";
 let thisChannel;
 let thisToken;
-let totalMessages = 0;  // This count of read channel messages need work to initialize and maintain the count.
+let totalMessages = 0; // This count of read channel messages need work to initialize and maintain the count.
 
 clientId = "";
 chatChannelName = "";
 chatChannelDescription = "";
-
 // const Twilio = require('twilio');
 // const Chat = require('twilio-chat');
 
@@ -30,7 +29,7 @@ function createChatClient() {
     // Since, programs cannot make an Ajax call to a remote resource,
     // Need to do an Ajax call to a local program that goes and gets the token.
     logger("Refresh the token using client id: " + clientId);
-    var jqxhr = $.get("clientTokenGet.php?identity=" + clientId, function (token) {
+    var jqxhr = $.get("generateToken?identity=" + clientId, function (token) {
         if (token === "0") {
             logger("- Error refreshing the token.");
             return;
@@ -50,9 +49,33 @@ function createChatClient() {
             thisChatClient.getSubscribedChannels();
             // thisChatClient.getSubscribedChannels().then(joinChatChannel);
             setButtons("createChatClient");
+            //
+            // Documentation:
+            //   https://www.twilio.com/docs/chat/tutorials/chat-application-node-express?code-sample=code-initialize-the-chat-client-9&code-language=Node.js&code-sdk-version=default
+            // thisChatClient.messagingClient.on('channelAdded', $.throttle(tc.loadChannelList));
+            // thisChatClient.messagingClient.on('channelRemoved', $.throttle(tc.loadChannelList));
+            thisChatClient.messagingClient.on('tokenExpired', onTokenExpiring);
+            //
         });
     }).fail(function () {
         logger("- Error refreshing the token and creating the chat client object.");
+    });
+}
+
+function onTokenExpiring() {
+    logger("onTokenExpiring: Refresh the token using client id: " + clientId);
+    var jqxhr = $.get("generateToken?identity=" + clientId, function (token) {
+        if (token === "0") {
+            logger("- Error refreshing the token.");
+            return;
+        }
+        thisToken = token;
+        logger("Token update: " + thisToken);
+        // -------------------------------
+        // https://www.twilio.com/docs/chat/access-token-lifecycle
+        thisChatClient.updateToken(thisToken);
+    }).fail(function () {
+        logger("- onTokenExpiring: Error refreshing the token and creating the chat client object.");
     });
 }
 
@@ -169,16 +192,16 @@ function joinChannel() {
         addChatMessage("+++ Channel joined. You can start chatting.");
         setButtons("join");
     }).catch(function (err) {
-        // - Join failed: myChannel3, t: Member already exists
+// - Join failed: myChannel3, t: Member already exists
         if (err.message === "Member already exists") {
-            // - Join failed: t: Member already exists
+// - Join failed: t: Member already exists
             addChatMessage("++ You already exist in the channel.");
             setButtons("join");
         } else {
             logger("- Join failed: " + thisChannel.uniqueName + ' :' + err.message + ":");
             addChatMessage("- Join failed: " + err.message);
         }
-        // Use this message for now:
+// Use this message for now:
     });
     // Set channel event listener: messages sent to the channel
     thisChannel.on('messageAdded', function (message) {
@@ -206,7 +229,7 @@ function onMessageAdded(message) {
 
 // -----------------------------------------------------------------------------
 function listMembers() {
-    // logger("+ Called: listMembers().");
+// logger("+ Called: listMembers().");
     var members = thisChannel.getMembers();
     addChatMessage("+ -----------------------");
     addChatMessage("+ Members of this channel: " + thisChannel.uniqueName);
@@ -230,7 +253,7 @@ function setTotalMessages() {
 }
 
 function listAllMessages() {
-    // logger("+ Called: listAllMessages().");
+// logger("+ Called: listAllMessages().");
     thisChannel.getMessages().then(function (messages) {
         totalMessages = messages.items.length;
         logger('Total Messages: ' + totalMessages);
@@ -272,7 +295,7 @@ function menubar() {
 window.onclick = function (e) {
     if (!e.target.matches('.menuicon') && !e.target.matches('.menubar')) {
         if (theBar === 0) {
-            // logger("+ Clicked window");
+// logger("+ Clicked window");
             var dropdowns = document.getElementsByClassName("menuDropdownList");
             for (var d = 0; d < dropdowns.length; d++) {
                 var openDropdown = dropdowns[d];
@@ -399,5 +422,4 @@ window.onload = function () {
     activateChatBox();
     setButtons("init");
 };
-
 // -----------------------------------------------------------------------------

@@ -878,7 +878,7 @@ app.get('/exit', function (req, res) {
     process.exit();
 });
 
-app.get('/clientTokenGet.php', function (req, res) {
+app.get('/generateToken', function (req, res) {
     sayMessage("+ Generate Chat Token.");
     if (req.query.identity) {
         res.send(generateToken( req.query.identity ));
