@@ -228,7 +228,7 @@ function generateToken(theIdentity) {
     });
     token.addGrant(chatGrant);
     token.identity = theIdentity;
-    // token.ttl=260;
+    // token.ttl=260;                   // Token time to live, in seconds.
     //
     // Output the token.
     theToken = token.toJwt();
@@ -276,15 +276,6 @@ function getTokenSeverSideSetClientObject(clientid) {
         createChatClientObject(newToken);
         return;
     });
-}
-
-function refreshChatToken() {
-    // Not tested.
-    debugMessage("refreshChatToken()");
-    generateToken(userIdentity);
-    thisChannel.updateToken(token);
-    sayMessage("+ Chat token refreshed.");
-    doPrompt();
 }
 
 // -----------------------------------------------------------------------------
@@ -395,10 +386,6 @@ function setChannelListnerFunctions() {
     //
     thisChannel.on('messageAdded', function (message) {
         onMessageAdded(message);
-    });
-    //
-    thisChannel.on('tokenAboutToExpire', function () {
-        refreshChatToken();
     });
 }
 
