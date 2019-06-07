@@ -62,7 +62,7 @@ function createChatClientObject() {
 
 function onTokenAboutToExpire() {
     logger("onTokenExpiring: Refresh the token using client id: " + clientId);
-    var jqxhr = $.get("generateToken?identity=" + clientId, function (token) {
+    var jqxhr = $.get("generateToken?identity=" + clientId, function (token, status) {
         if (token === "0") {
             logger("- Error refreshing the token.");
             return;
@@ -71,13 +71,10 @@ function onTokenAboutToExpire() {
         logger("Token update: " + thisToken);
         // -------------------------------
         // https://www.twilio.com/docs/chat/access-token-lifecycle
-        // The following 3 didn't work:
-        //      thisChatClient.updateToken(thisToken);
-        //      thisChatClient.Client.updateToken(thisToken);
-        Twilio.Chat.Client.updateToken(thisToken);
+        thisChatClient.updateToken(thisToken);
         // -------------------------------
     }).fail(function () {
-        logger("- onTokenExpiring: Error refreshing the token and creating the chat client object.");
+        logger("- onTokenExpiring: Error refreshing the token and creating the chat client object. Status: " + status);
     });
 }
 

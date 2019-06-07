@@ -216,6 +216,7 @@ function generateToken(theIdentity) {
     sayMessage("+ Generate token, chat user ID: " + theIdentity);
     const AccessToken = require('twilio').jwt.AccessToken;
     // Create an API key and secret string: https://www.twilio.com/console/chat/runtime/api-keys
+    // Create a Chat token: https://www.twilio.com/docs/chat/create-tokens
     const token = new AccessToken(
             ACCOUNT_SID,
             CHAT_API_KEY,
@@ -227,6 +228,7 @@ function generateToken(theIdentity) {
     });
     token.addGrant(chatGrant);
     token.identity = theIdentity;
+    // token.ttl=260;
     //
     // Output the token.
     theToken = token.toJwt();
