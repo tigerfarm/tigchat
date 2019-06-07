@@ -74,7 +74,11 @@ function onTokenAboutToExpire() {
         logger("Token update: " + thisToken);
         // -------------------------------
         // https://www.twilio.com/docs/chat/access-token-lifecycle
-        thisChatClient.Client.updateToken(thisToken);
+        // The following 2 didn't work:
+        //      thisChatClient.updateToken(thisToken);
+        //      thisChatClient.Client.updateToken(thisToken);
+        Twilio.Chat.Client.updateToken(thisToken);
+        // -------------------------------
     }).fail(function () {
         logger("- onTokenExpiring: Error refreshing the token and creating the chat client object.");
     });
