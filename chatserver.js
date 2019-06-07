@@ -1,61 +1,24 @@
-// From:
-//  https://github.com/heroku/node-js-getting-started
-//  https://www.twilio.com/docs/usage/tutorials/how-to-set-up-your-node-js-and-express-development-environment
-// Sample:
-//  https://github.com/expressjs/express/blob/master/examples/auth/index.js
-//  
-// To do:
-//  Sample using: setHeaders
-//
-
 // -----------------------------------------------------------------------------
+// Chat web server
+// 
 // Easy to use.
 // 
-// ------------------------------
-// Setup to generate chat tokens:
-// 
-//  1. Either create environment variables with your chat token values
-//      which are used in the generateToken() function.
-//      
-// Required, if generating the chat tokens in this program:
-var ACCOUNT_SID = process.env.ACCOUNT_SID;
-//
-// Create a Chat Service:
-//  https://www.twilio.com/console/chat/dashboard
-var CHAT_SERVICE_SID = process.env.CHAT_SERVICE_SID;
-//
-// Create an API key and secret string:
-//  https://www.twilio.com/console/chat/runtime/api-keys
-var CHAT_API_KEY = process.env.CHAT_API_KEY;
-var CHAT_API_KEY_SECRET = process.env.CHAT_API_KEY_SECRET;
-//  
-//  2. Or create a server side program to generate tokens
-//      and add the URL (command: url) to call the program,
-//      which are used in getTokenSeverSide() function.
-//  url https://about-time-2357.twil.io/tokenchat
-var CHAT_GENERATE_TOKEN_URL = process.env.CHAT_GENERATE_TOKEN_URL;
-//
-// Create a Twilio Function(example path "/tokenchat") to generate access tokens:
-//  https://www.twilio.com/console/runtime/functions/manage
-// Twilio Function code to generate a token:
-//  https://github.com/tigerfarm/owlchat/blob/master/generateToken.js
-//  
-// ------------------------------
-// Run the following commands:
+// Install modules.
+//  $ npm install --save request
+//  $ npm install --save express
 //  $ npm install --save twilio-chat
-//  $ node --no-deprecation chatcli.js
-//  ...
-//  + Command, Enter > user me
-//  + Command, Enter > url https://about-time-2357.twil.io/tokenchat
-//  + Command, Enter > init
-//  + Command, Enter > list
 //  
+// Run the web server. Default port is hardcoded to 8000.
+//  $ node chatsever.js
+// 
 // -----------------------------------------------------------------------------
 // To do:
-//  Auto token refresh using tokenAboutToExpire.
+//  Complete testing of auto token refresh using tokenAboutToExpire.
+//  
 //  Delete abc channel, current error: - Delete failed: SessionError: User unauthorized for command
 //      https://www.twilio.com/docs/chat/rest/users
 //      https://www.twilio.com/docs/chat/permissions
+//
 //  Presence: 1) subscribe/unsubscribe to users. 2) Check who is online.
 //  SMS Chat gateway.
 //  Properly mantain the message count for a user for their current channel
@@ -76,78 +39,61 @@ var CHAT_GENERATE_TOKEN_URL = process.env.CHAT_GENERATE_TOKEN_URL;
 //      https://www.twilio.com/docs/chat/media-support
 //      https://www.twilio.com/docs/chat/rest/media
 //      https://www.twilio.com/docs/chat/rest/media#properties
-//  Blog: How to build a CLI with Node.js
-//      https://www.youtube.com/watch?v=rTsz09zRuTU
-//      https://www.twilio.com/blog/how-to-build-a-cli-with-node-js
 //  
+// -----------------------------------------------------------------------------
+// Setup to generate chat tokens.
+// 
+// Create environment variables which are used in the generateToken() function.
+//
+var ACCOUNT_SID = process.env.ACCOUNT_SID;
+//
+// Create a Chat Service:
+//  https://www.twilio.com/console/chat/dashboard
+var CHAT_SERVICE_SID = process.env.CHAT_SERVICE_SID;
+//
+// Create an API key and secret string:
+//  https://www.twilio.com/console/chat/runtime/api-keys
+var CHAT_API_KEY = process.env.CHAT_API_KEY;
+var CHAT_API_KEY_SECRET = process.env.CHAT_API_KEY_SECRET;
+//  
+// ----------------------------------
+function generateToken(theIdentity) {
+    // Documentation: https://www.twilio.com/docs/api/rest/access-tokens
+    //
+    if (theIdentity === "") {
+        sayRequirement("Required: user identity for creating a chat token.");
+        doPrompt();
+        return "";
+    }
+    sayMessage("+ Generate token, chat user ID: " + theIdentity);
+    const AccessToken = require('twilio').jwt.AccessToken;
+    // Create a Chat token: https://www.twilio.com/docs/chat/create-tokens
+    const token = new AccessToken(
+            ACCOUNT_SID,
+            CHAT_API_KEY,
+            CHAT_API_KEY_SECRET
+            );
+    // Create a Chat service: https://www.twilio.com/console/chat/services
+    const chatGrant = new AccessToken.ChatGrant({
+        serviceSid: CHAT_SERVICE_SID        // Begins with 'IS'
+    });
+    token.addGrant(chatGrant);
+    token.identity = theIdentity;
+    // token.ttl=260;                   // Token time to live, in seconds.
+    //
+    // Output the token.
+    theToken = token.toJwt();
+    debugMessage("+ theToken " + theToken);
+    return(theToken);
+}
 
 // -----------------------------------------------------------------------------
 // Required for SMS:
 var AUTH_TOKEN = process.env.AUTH_TOKEN;
 //
-// Values can be set using the Chat CLI command: sms.
+// Defaults:
 var smsSendFrom = process.env.PHONE_NUMBER3;    // sms from <phone number>
 var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
-
-// -----------------------------------------------------------------------------
-function doHelp() {
-    sayMessage("------------------------------------------------------------------------------\n\
-Commands:\n\
-\n\
-> show\n\
-++ Show chat client settings.\n\
-\n\
-> debug\n\
-++ Toggle debug on and off.\n\
-\n\
-> help\n\
-\n\
-> exit\n\
-\n\
--------------------------\n\
-> users\n\
-++ List chat users, the first 30. \n\
-\n\
-> user <identity>\n\
-++ Set your chat user identity. \n\
-\n\
-> generate\n\
-++ Generate a token using the local environment variables, and initialize the chat client object.\n\
-\n\
-> url <URL to retrieve a token>\n\
-++ Set the token URL value. This URL is used to retrieve a chat access token.\n\
-> init\n\
-++ Get a token using the token retrieval URL, and initialize the chat client object.\n\
-\n\
--------------------------\n\
-> list\n\
-++ List public channels.\n\
-> join <channel>\n\
-> join <channel> [<description>]\n\
-> members\n\
-++ List channel members.\n\
-> history\n\
-++ List channel messages.\n\
-> delete <channel>\n\
-\n\
--------------------------\n\
-> send\n\
-++ Toggle send mode. When on, send messages.\n\
-++ Enter blank line to exit send mode.\n\
-> send <message>\n\
-\n\
--------------------------\n\
-> sms\n\
-++ Toggle SMS send mode. When on, send messages.\n\
-++ Enter blank line to exit send mode.\n\
-> sms send <message>\n\
-> sms to <phone number>\n\
-++ Set to phone number.\n\
-> sms from <phone number>\n\
-++ Set from phone number.\n\
-"
-            );
-}
 
 // -----------------------------------------------------------------------------
 console.log("+++ Chat program is starting up.");
@@ -190,92 +136,22 @@ function debugMessage(message) {
     }
 }
 
-var thePromptPrefix = "+ Command, ";
-var thePrompt = "Enter > ";
-function doPrompt() {
-    // No line feed after the prompt.
-    process.stdout.write(thePromptPrefix + thePrompt);
+var returnMessage = '';
+function sayMessage(message) {
+    returnMessage = returnMessage + message + "<br>";
+    console.log(message);
 }
 
 function sayRequirement(message) {
     console.log("- " + message);
 }
 
-// -----------------------------------------------------------------------------
-function generateToken(theIdentity) {
-    //
-    // Generate a chat token using environment variables.
-    //
-    // Documentation: https://www.twilio.com/docs/api/rest/access-tokens
-    //
-    if (theIdentity === "") {
-        sayRequirement("Required: user identity for creating a chat token.");
-        doPrompt();
-        return "";
-    }
-    sayMessage("+ Generate token, chat user ID: " + theIdentity);
-    const AccessToken = require('twilio').jwt.AccessToken;
-    // Create an API key and secret string: https://www.twilio.com/console/chat/runtime/api-keys
-    // Create a Chat token: https://www.twilio.com/docs/chat/create-tokens
-    const token = new AccessToken(
-            ACCOUNT_SID,
-            CHAT_API_KEY,
-            CHAT_API_KEY_SECRET
-            );
-    // Create a Chat service: https://www.twilio.com/console/chat/services
-    const chatGrant = new AccessToken.ChatGrant({
-        serviceSid: CHAT_SERVICE_SID        // Begins with 'IS'
-    });
-    token.addGrant(chatGrant);
-    token.identity = theIdentity;
-    // token.ttl=260;                   // Token time to live, in seconds.
-    //
-    // Output the token.
-    theToken = token.toJwt();
-    debugMessage("+ theToken " + theToken);
-    return(theToken);
-}
-
-function getTokenSeverSideSetClientObject(clientid) {
-    var newToken = "";
-    debugMessage("getTokenSeverSideSetClientObject(" + clientid + ")");
-    if (firstInit === "") {
-        firstInit = "initialized";
-        sayMessage("+ Ready for commands such as: help, init, or generate.");
-        doPrompt();
-        return;
-    }
-    if (userIdentity === "") {
-        sayRequirement("Required: user identity for creating a chat object.");
-        doPrompt();
-        return;
-    }
-    if (CHAT_GENERATE_TOKEN_URL === "") {
-        sayRequirement("Required: the token URL.");
-        doPrompt();
-        return;
-    }
-    var newTokenUrl = CHAT_GENERATE_TOKEN_URL + "?identity=" + clientid + "&device=cli";
-    request(newTokenUrl, function (error, response, responseString) {
-        if (error) {
-            sayMessage('- error:', error);
-        }
-        var theStatus = response && response.statusCode;
-        debugMessage('statusCode: ' + theStatus);
-        if (theStatus === 404) {
-            sayMessage('- Error, invalid token URL: ' + newTokenUrl);
-            doPrompt();
-            return;
-        }
-        newToken = responseString;
-        if (responseString.indexOf("token") > 0) {
-            newToken = JSON.parse(responseString).token;
-        }
-        debugMessage('token: ' + newToken);
-        sayMessage("+ New token retrieved.");
-        createChatClientObject(newToken);
-        return;
-    });
+// Since the code is from the command line version, I left this code in.
+var thePromptPrefix = "+ Command, ";
+var thePrompt = "Enter > ";
+function doPrompt() {
+    // No line feed after the prompt.
+    process.stdout.write(thePromptPrefix + thePrompt);
 }
 
 // -----------------------------------------------------------------------------
@@ -669,11 +545,6 @@ function doShow() {
     if (CHAT_API_KEY_SECRET !== "") {
         sayMessage("++ Chat API key secret is set.");
     }
-    if (CHAT_GENERATE_TOKEN_URL === "") {
-        sayMessage("++ Token URL is required, if you are not generating tokens using local environment variables.");
-    } else {
-        sayMessage("++ Token URL: " + CHAT_GENERATE_TOKEN_URL);
-    }
     sayMessage("-----------------------");
     if (debugState === 0) {
         sayMessage("++ Debug: off");
@@ -747,12 +618,6 @@ function onMessageAdded(message) {
     }
     incCount();
     doPrompt();
-}
-
-var returnMessage = '';
-function sayMessage(message) {
-    returnMessage = returnMessage + message + "<br>";
-    console.log(message);
 }
 
 // -----------------------------------------------------------------------------
