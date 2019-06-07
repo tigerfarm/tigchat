@@ -9,7 +9,7 @@
 let thisChatClient = "";
 let thisChannel;
 let thisToken;
-let totalMessages = 0; // This count of read channel messages need work to initialize and maintain the count.
+let totalMessages = 0; // This count of read channel messages needs work to initialize and maintain the count.
 
 clientId = "";
 chatChannelName = "";
@@ -18,7 +18,7 @@ chatChannelDescription = "";
 // const Chat = require('twilio-chat');
 
 // -----------------------------------------------------------------------------
-function createChatClient() {
+function createChatClientObject() {
     clientId = $("#username").val();
     if (clientId === "") {
         logger("Required: Username.");
@@ -39,9 +39,6 @@ function createChatClient() {
         // -------------------------------
         // https://www.twilio.com/docs/chat/initializing-sdk-clients#javascript_1
         // https://www.twilio.com/docs/chat/tutorials/chat-application-node-express#initialize-the-programmable-chat-client
-        // With V2: Chat E: Failed to create session Error: "Invalid Access Token grants"
-        // With V2: Unhandled promise rejection Error: "Invalid Access Token grants"
-        // With V3: Unhandled promise rejection Error: "Can't connect to twilsock"
         Twilio.Chat.Client.create(thisToken).then(chatClient => {
             logger("Chat client created: thisChatClient: " + thisChatClient);
             thisChatClient = chatClient;
@@ -74,7 +71,7 @@ function onTokenAboutToExpire() {
         logger("Token update: " + thisToken);
         // -------------------------------
         // https://www.twilio.com/docs/chat/access-token-lifecycle
-        // The following 2 didn't work:
+        // The following 3 didn't work:
         //      thisChatClient.updateToken(thisToken);
         //      thisChatClient.Client.updateToken(thisToken);
         Twilio.Chat.Client.updateToken(thisToken);
@@ -165,30 +162,25 @@ function joinChatChannel() {
                         + " name: " + channel.friendlyName
                         );
                 //
-            }).catch(function () {
-        logger("Channel doesn't exist, created the channel.");
-        chatChannelDescription = $("#channelDescription").val();
-        if (chatChannelDescription === "") {
-            chatChannelDescription = chatChannelName;
-        }
-        thisChatClient.createChannel({
-            uniqueName: chatChannelName,
-            friendlyName: chatChannelDescription
-        }).then(function (channel) {
-            logger("Channel created : " + chatChannelName + " " + chatChannelDescription + " : " + channel);
-            thisChannel = channel;
-            joinChannel();
-        }).catch(function (channel) {
-            logger('-- Failed to create the channel: ' + channel);
-        });
-    });
+            })
+            .catch(function () {
+                logger("Channel doesn't exist, created the channel.");
+                chatChannelDescription = $("#channelDescription").val();
+                if (chatChannelDescription === "") {
+                    chatChannelDescription = chatChannelName;
+                }
+                thisChatClient.createChannel({
+                    uniqueName: chatChannelName,
+                    friendlyName: chatChannelDescription
+                }).then(function (channel) {
+                    logger("Channel created : " + chatChannelName + " " + chatChannelDescription + " : " + channel);
+                    thisChannel = channel;
+                    joinChannel();
+                }).catch(function (channel) {
+                    logger('-- Failed to create the channel: ' + channel);
+                });
+            });
 }
-
-// https://www.twilio.com/docs/chat/channels
-// A channel is no longer visible to the Client
-// thisChatClient.on('channelRemoved', function(channel) {
-//   addChatMessage('+ Channel removed: ' + channel.friendlyName);
-// });
 
 function joinChannel() {
     logger('Join the channel: ' + thisChannel.uniqueName);
@@ -197,16 +189,13 @@ function joinChannel() {
         addChatMessage("+++ Channel joined. You can start chatting.");
         setButtons("join");
     }).catch(function (err) {
-// - Join failed: myChannel3, t: Member already exists
         if (err.message === "Member already exists") {
-// - Join failed: t: Member already exists
             addChatMessage("++ You already exist in the channel.");
             setButtons("join");
         } else {
             logger("- Join failed: " + thisChannel.uniqueName + ' :' + err.message + ":");
             addChatMessage("- Join failed: " + err.message);
         }
-// Use this message for now:
     });
     // Set channel event listener: messages sent to the channel
     thisChannel.on('messageAdded', function (message) {
@@ -226,15 +215,17 @@ function joinChannel() {
 
 function onMessageAdded(message) {
     addChatMessage("> " + message.author + " : " + message.channel.uniqueName + " : " + message.body);
+    //
     // IMe9c317dc4a1f4276bfeb1286535271d5 : david : undefined : +16508668188 : back to you
     // addChatMessage("> " + message.sid + " : "+ message.author + " : "+ message.friendlyName
     //         + " : " + message.channel.uniqueName + " : " + message.body);
+    //
     incCount();
 }
 
 // -----------------------------------------------------------------------------
 function listMembers() {
-// logger("+ Called: listMembers().");
+    logger("+ Called: listMembers().");
     var members = thisChannel.getMembers();
     addChatMessage("+ -----------------------");
     addChatMessage("+ Members of this channel: " + thisChannel.uniqueName);
@@ -247,7 +238,6 @@ function listMembers() {
             }
         });
     });
-    // Not working: addChatMessage("++ getUnconsumedMessagesCount = " + thisChannel.getUnconsumedMessagesCount);
 }
 
 function setTotalMessages() {
@@ -258,7 +248,7 @@ function setTotalMessages() {
 }
 
 function listAllMessages() {
-// logger("+ Called: listAllMessages().");
+    logger("+ Called: listAllMessages().");
     thisChannel.getMessages().then(function (messages) {
         totalMessages = messages.items.length;
         logger('Total Messages: ' + totalMessages);
@@ -300,7 +290,7 @@ function menubar() {
 window.onclick = function (e) {
     if (!e.target.matches('.menuicon') && !e.target.matches('.menubar')) {
         if (theBar === 0) {
-// logger("+ Clicked window");
+            // logger("+ Clicked window");
             var dropdowns = document.getElementsByClassName("menuDropdownList");
             for (var d = 0; d < dropdowns.length; d++) {
                 var openDropdown = dropdowns[d];
@@ -311,14 +301,14 @@ window.onclick = function (e) {
         }
     }
     theBar = 0;
-}
+};
 
 // -----------------------------------------------------------------------------
 function activateChatBox() {
     $("#message").removeAttr("disabled");
     //
     $("#btn-createChatClient").click(function () {
-        createChatClient();
+        createChatClientObject();
     });
     $("#btn-join").click(function () {
         joinChatChannel();
@@ -423,7 +413,6 @@ function addChatMessage(message) {
 window.onload = function () {
     log.value = "+++ Start.";
     chatMessages.value = "+++ Ready to Create Chat Client, then join a chat channel and chat.";
-    // createChatClient();
     activateChatBox();
     setButtons("init");
 };
