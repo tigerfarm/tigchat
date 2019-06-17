@@ -302,7 +302,6 @@ window.onclick = function (e) {
     theBar = 0;
 };
 
-// -----------------------------------------------------------------------------
 function activateChatBox() {
     $("#message").removeAttr("disabled");
     //
@@ -394,7 +393,6 @@ function setButtons(activity) {
     }
 }
 
-// -----------------------------------------------------------------------------
 function logger(message) {
     var aTextarea = document.getElementById('log');
     aTextarea.value += "\n> " + message;
@@ -403,7 +401,6 @@ function logger(message) {
 function clearLog() {
     log.value = "+ Ready";
 }
-
 function addChatMessage(message) {
     var aTextarea = document.getElementById('chatMessages');
     aTextarea.value += "\n" + message;

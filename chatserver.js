@@ -596,7 +596,7 @@ function doSendSms(smsFrom, smsTo, theMessage) {
         debugMessage("response.statusCode: " + response.statusCode);
         if (!error) {
             const jsonData = JSON.parse(body);
-            sayMessage("++  Message status = " + jsonData.status);
+            sayMessage("++  Message status = " + jsonData.status + ", From: " + smsFrom + ", To: " + smsTo);
             debugMessage("jsonData: " + body);
         } else {
             sayMessage("++ error: " + error);
@@ -609,11 +609,11 @@ function doSendSms(smsFrom, smsTo, theMessage) {
 function onMessageAdded(message) {
     // Other message properties: message.sid, message.friendlyName
     if (message.author === userIdentity) {
-        debugMessage("> " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
+        debugMessage("> " + userIdentity + " : " + message.channel.uniqueName + ":" + thisChatChannelName + " : " + message.body);
     } else {
-        sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
+        sayMessage("< " + message.author + " : " + message.channel.uniqueName + " : " + message.body);
         if (userIdentity.startsWith("+") && thisChatChannelName.startsWith("+")) {
-            doSendSms(userIdentity, thisChatChannelName, message.body);
+            doSendSms(userIdentity, thisChatChannelName, "Author: " + message.author + " Text: " + message.body);
         }
     }
     incCount();
