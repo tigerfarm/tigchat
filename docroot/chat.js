@@ -29,6 +29,8 @@ function createChatClientObject() {
     // Since, programs cannot make an Ajax call to a remote resource,
     // Need to do an Ajax call to a local program that goes and gets the token.
     logger("Refresh the token using client id: " + clientId);
+    //
+    // I should use: $.getJSON
     var jqxhr = $.get("generateToken?identity=" + clientId, function (token) {
         if (token === "0") {
             logger("- Error refreshing the token.");
