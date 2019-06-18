@@ -614,7 +614,7 @@ function onMessageAdded(message) {
     } else {
         sayMessage("< " + message.author + " : " + message.channel.uniqueName + " : " + message.body);
         if (userIdentity.startsWith("+") && thisChatChannelName.startsWith("+")) {
-            doSendSms(userIdentity, thisChatChannelName, "Author: " + message.author + " Text: " + message.body);
+            doSendSms(userIdentity, thisChatChannelName, "Author: " + message.author + ", text: " + message.body);
         }
     }
     incCount();
