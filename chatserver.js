@@ -417,6 +417,7 @@ function doSend(theCommand) {
         doPrompt();
     } else {
         commandLength = 'send'.length + 1;
+        sayRequirement("+ To the chat channel: " + thisChatChannelName + ", Send: " + theCommand.substring(commandLength) );
         if (theCommand.length > commandLength) {
             thisChannel.sendMessage(theCommand.substring(commandLength));
         } else {
@@ -662,6 +663,17 @@ app.get('/smstochat', function (req, res) {
     }
 });
 
+app.get('/send', function (req, res) {
+    // http://localhost:8000/send?message=hello2
+    if (req.query.message) {
+        var smsBody = req.query.message;
+        doSend("send " + smsBody);
+        res.send("+ Sent Chat message: " + smsBody);
+    } else {
+        res.send('+ No Chat message to send.');
+    }
+});
+
 app.get('/smssend', function (req, res) {
     // /smssend?Body=hello
     if (req.query.Body) {
@@ -674,16 +686,6 @@ app.get('/smssend', function (req, res) {
     }
 });
 
-app.get('/send', function (req, res) {
-    // /send?message=Hello there.
-    if (req.query.message) {
-        var smsBody = req.query.message;
-        doSend("send " + smsBody);
-        res.send("+ Sent Chat message: " + smsBody);
-    } else {
-        res.send('+ No Chat message to send.');
-    }
-});
 app.get('/join', function (req, res) {
     // /join?channel=%2B16505552222
     if (req.query.channel) {
