@@ -52,6 +52,7 @@ No development or credit card information required to try Chat.
 
 [https://www.twilio.com/console/chat/runtime/api-keys](https://www.twilio.com/console/chat/runtime/api-keys)
 
+--------------------------------------------------------------------------------
 ## For Developers
 
 Following are the steps to run the Chat Web Application on your localhost computer.
@@ -89,6 +90,8 @@ Enter a Channel name, example: mychannel (same as the other client).
 
 Send messages between your clients.
 ````
+
+--------------------------------------------------------------------------------
 ## SMS Twilio Chat Gateway
 
 The following is my notes regarding a gateway between Chat and SMS.
@@ -119,4 +122,31 @@ An alternative is to have 1 to 1 interactions between a person using SMS and a p
 The person using Chat, would use the Twilio phone number as their Chat identity and join a channel named as the Twilio phone number.
 Only the two can chat.
 
+--------------------------------------------------------------------------------
+## HTTP GET Request Relay
+
+The below, is initiated by a browser. It could have been initiated as Twilio HTTP request for TwiML.
+
+````
++ Browser makes an HTTP GET request to chatserver.js, example:
+    https://tigchat.herokuapp.com/send?message=/http/get/twiml?p1=abc%26p2=def
+
+chatserver.js is running on the internet, identity: relay, channel: relay.
++ chatserver.js receives the request.
+++ Since it starts with "http/get/", it sends a chat message to the relay channel:
+    /http/get/twiml?p1=abc%26p2=def
+++ chatserver.js waits for a chat message response.
+
+chatcli.js is running behind a firewall, identity: local, channel: relay.
++++ chatcli.js receives the message:
+    /http/get/twiml?p1=abc%26p2=def
+++ Since it starts with "http/get/", it makes an HTTP GET request to the URL, example:
+    https://localhost:8000/twiml?p1=abc%26p2=def
+++ When it receives the response, it send the response as a chat message to channel: relay.
+
+++ chatserver.js receives the response chat message on channel: relay.
+++ chatserver.js sends the response to the requesting browser.
+````
+
+--------------------------------------------------------------------------------
 Cheers...
