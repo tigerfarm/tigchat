@@ -409,10 +409,10 @@ function onMessageAdded(message) {
         debugMessage("> " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
     } else {
         sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
-        // david
-        // if begins with "/http
-        // Example: /http/get/twiml?p1=abc&p2=def
         if (message.body.startsWith('/http/get')) {
+            // david
+            // Example: /http/get/twiml?p1=abc&p2=def
+            // Need to send the actual URL.
             request({method: "GET", url: 'https://tigerfarmpress.com/hello.txt'},
                     function (error, response, body) {
                         debugMessage("Get response: " + body);

@@ -623,6 +623,7 @@ function onMessageAdded(message) {
         if (userIdentity.startsWith("+") && thisChatChannelName.startsWith("+")) {
             doSendSms(userIdentity, thisChatChannelName, "Author: " + message.author + ", text: " + message.body);
         }
+        // david, process the HTTP GET response, when it's returned.
     }
     incCount();
     doPrompt();
@@ -729,8 +730,13 @@ app.get('/send', function (req, res) {
     if (req.query.message) {
         var smsBody = req.query.message;
         doSend("send " + smsBody);
-        // wait for response and the send it back.
-        res.send("+ Sent Chat message: " + smsBody);
+        if (smsBody.startsWith('/http/get')) {
+            // david
+            // Wait for the HTTP GET response, and then send it back.
+            res.send("+ HTTP GET response needs to be sent back for the following request: " + smsBody);
+        } else {
+            res.send("+ Sent Chat message: " + smsBody);
+        }
     } else {
         res.send('+ No Chat message to send.');
     }
