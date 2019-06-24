@@ -79,7 +79,7 @@ function generateToken(theIdentity) {
     });
     token.addGrant(chatGrant);
     token.identity = theIdentity;
-    token.ttl=1200;          // Token time to live, in seconds. 1200 = 20 minutes.
+    token.ttl = 1200;          // Token time to live, in seconds. 1200 = 20 minutes.
     //
     // Output the token.
     theToken = token.toJwt();
@@ -172,7 +172,14 @@ function createChatClientObject(token) {
         thisChatClient = chatClient;
         debugMessage("Chat client object created: thisChatClient: " + thisChatClient);
         sayMessage("++ Chat client object created for the user: " + userIdentity);
-        thisChatClient.getSubscribedChannels();
+        // thisChatClient.getSubscribedChannels();
+        thisChatClient.getSubscribedChannels().then(function (paginator) {
+            sayMessage("++ Chat client Subscribed Channels: ");
+            for (i = 0; i < paginator.items.length; i++) {
+                const channel = paginator.items[i];
+                console.log('+++ Channel: ' + channel.friendlyName);
+            }
+        });
         if (firstInit === "") {
             firstInit = "initialized";
             sayMessage("+ Ready for commands such as: help, init, or generate.");
@@ -417,7 +424,7 @@ function doSend(theCommand) {
         doPrompt();
     } else {
         commandLength = 'send'.length + 1;
-        sayRequirement("+ To the chat channel: " + thisChatChannelName + ", Send: " + theCommand.substring(commandLength) );
+        sayRequirement("+ To the chat channel: " + thisChatChannelName + ", Send: " + theCommand.substring(commandLength));
         if (theCommand.length > commandLength) {
             thisChannel.sendMessage(theCommand.substring(commandLength));
         } else {
@@ -622,13 +629,67 @@ function onMessageAdded(message) {
 }
 
 // -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Web server interface to call functions.
+// -----------------------------------------------------------------------------
 // 
 // $ npm install express --save
 const express = require('express');
 const path = require('path');
+const url = require("url");
 const PORT = process.env.PORT || 8000;
 var app = express();
+
+// -----------------------------------------------------------------------------
+var theUrl = '';
+var theQueryJson = '';
+app.get('*', function (request, res, next) {
+    console.log("------------------");
+    console.log("+ HTTP headers:");
+    var theHeaders = JSON.stringify(request.headers).split('","');
+    for (var i = 0; i < theHeaders.length; i++) {
+        if (i === 0) {
+            console.log('++ ' + theHeaders[i].substring(1, theHeaders[i].length) + '"');
+        } else if (i === theHeaders.length - 1) {
+            console.log('++ "' + theHeaders[i] + '');
+        } else {
+            console.log('++ "' + theHeaders[i].substring(0, theHeaders[i].length - 1) + '"');
+        }
+    }
+    console.log("---");
+    theUrl = url.parse(request.url).pathname;
+    theQueryJson = url.parse(request.url).query;
+    var theQueryString = '';
+    if (theQueryJson !== null) {
+        theQueryString = " ? " + JSON.stringify(theQueryString);
+    }
+    var urlComponentMessage = '+ URL components : ' + request.method + ' ' + theUrl + theQueryString;
+    console.log(urlComponentMessage);
+    next();
+});
+
+// -----------------------------------------------------------------------------
+
+app.get('/http/get/*', function (request, res) {
+    // 
+    // Future, make the following URL work, where "relay" is the channel name:
+    //      http://localhost:8000/http/get/relay/def?p1=abc&p2=def
+    // Request received by the server:
+    //      + /http/get/* : /http/get/relay/def ? "p1=abc&p2=def"
+    // 
+    // Set setserver.js:
+    //      var userIdentity = "relay";
+    //      var theChannel = "relay";
+    // Run 2 times:
+    //      $ node setserver.js
+    // Then send a chat message:
+    //      http://localhost:8000/send?message=/http/get/twiml?p1=abc%26p2=def
+    //      https://tigchat.herokuapp.com/send?message=/http/get/twiml?p1=abc%26p2=def
+    //
+    var urlComponentMessage = '+ /http/get/* : ' + theUrl + " ? " + JSON.stringify(theQueryJson);
+    console.log(urlComponentMessage);
+    res.send(urlComponentMessage);
+});
 
 // -----------------------------------------------------------------------------
 app.get('/smstochat', function (req, res) {
@@ -737,7 +798,7 @@ app.get('/exit', function (req, res) {
 app.get('/generateToken', function (req, res) {
     sayMessage("+ Generate Chat Token.");
     if (req.query.identity) {
-        res.send(generateToken( req.query.identity ));
+        res.send(generateToken(req.query.identity));
     } else {
         sayMessage("- Parameter required: identity.");
         res.send(0);
@@ -752,10 +813,31 @@ app.get('/echo', function (req, res) {
         res.send('Nothing to echo.');
     }
 });
+
+// Documentation: http://expressjs.com/en/api.html
+//
+app.get('/hello', function (req, res) {
+    res.send('+ hello there.');
+});
+//
+app.param(['id', 'page'], function (req, res, next, value) {
+    console.log('+ hello there: ' + value);
+    res.send('+ hello there: ' + value);
+    // next();
+});
+app.get('/hello/:id', function (req, res) {
+    console.log('+ /hello/:id ');
+    res.send('+ hello there 2');
+});
+app.get('*', function (req, res, next) {
+    console.log('+ * url: ' + url.parse(req.url).pathname);
+    next();
+});
+
 // -----------------------------------------------------------------------------
 app.use(express.static('docroot'));
 app.use(function (err, req, res, next) {
-    console.error(err.stack)
+    console.error(err.stack);
     res.status(500).send('HTTP Error 500.');
 });
 app.listen(PORT, function () {

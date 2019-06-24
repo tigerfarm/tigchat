@@ -296,7 +296,14 @@ function createChatClientObject(token) {
         thisChatClient = chatClient;
         debugMessage("Chat client object created: thisChatClient: " + thisChatClient);
         sayMessage("++ Chat client object created for the user: " + userIdentity);
-        thisChatClient.getSubscribedChannels();
+        // thisChatClient.getSubscribedChannels();
+        thisChatClient.getSubscribedChannels().then(function (paginator) {
+            sayMessage("++ Chat client Subscribed Channels: ");
+            for (i = 0; i < paginator.items.length; i++) {
+                const channel = paginator.items[i];
+                console.log('+++ Channel: ' + channel.friendlyName);
+            }
+        });
         if (firstInit === "") {
             firstInit = "initialized";
             sayMessage("+ Ready for commands such as: help, init, or generate.");
@@ -399,6 +406,8 @@ function onMessageAdded(message) {
         debugMessage("> " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
     } else {
         sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
+        // if begins with "/http
+        // Example: /http/get/twiml?p1=abc&p2=def
     }
     incCount();
     doPrompt();
