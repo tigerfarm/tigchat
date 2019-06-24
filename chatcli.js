@@ -79,6 +79,9 @@ var AUTH_TOKEN = process.env.AUTH_TOKEN;
 var smsSendFrom = process.env.PHONE_NUMBER3;    // sms from <phone number>
 var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
 
+// Required for SMS and HTTP
+var request = require('request');
+
 // -----------------------------------------------------------------------------
 function doHelp() {
     sayMessage("------------------------------------------------------------------------------\n\
@@ -406,8 +409,17 @@ function onMessageAdded(message) {
         debugMessage("> " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
     } else {
         sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
+        // david
         // if begins with "/http
         // Example: /http/get/twiml?p1=abc&p2=def
+        if (message.body.startsWith('/http/get')) {
+            request({method: "GET", url: 'https://tigerfarmpress.com/hello.txt'},
+                    function (error, response, body) {
+                        debugMessage("Get response: " + body);
+                        sayMessage("+ Got the response from the HTTP GET request.");
+                        doSend("send " + body);
+                    });
+        }
     }
     incCount();
     doPrompt();
@@ -653,7 +665,7 @@ function doSendSms(theMessage) {
             Body: theMessage
         }
     };
-    var request = require('request');
+    // var request = require('request');
     debugMessage('URL request: ' + theRequest);
     function callback(error, response, body) {
         debugMessage("response.statusCode: " + response.statusCode);

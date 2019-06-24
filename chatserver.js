@@ -729,6 +729,7 @@ app.get('/send', function (req, res) {
     if (req.query.message) {
         var smsBody = req.query.message;
         doSend("send " + smsBody);
+        // wait for response and the send it back.
         res.send("+ Sent Chat message: " + smsBody);
     } else {
         res.send('+ No Chat message to send.');
