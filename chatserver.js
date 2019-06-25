@@ -170,6 +170,7 @@ function createChatClientObject(token) {
     // -------------------------------
     Chat.Client.create(token).then(chatClient => {
         thisChatClient = chatClient;
+        thisChatClient.on('tokenAboutToExpire', onTokenAboutToExpire);
         debugMessage("Chat client object created: thisChatClient: " + thisChatClient);
         sayMessage("++ Chat client object created for the user: " + userIdentity);
         // thisChatClient.getSubscribedChannels();
@@ -182,9 +183,25 @@ function createChatClientObject(token) {
         });
         if (firstInit === "") {
             firstInit = "initialized";
-            sayMessage("+ Ready for commands such as: help, init, or generate.");
         }
         doPrompt();
+    });
+}
+
+function onTokenAboutToExpire() {
+    // david
+    debugMessage("onTokenExpiring: Refresh the token using client id: " + userIdentity);
+    var jqxhr = $.get("generateToken?identity=" + userIdentity, function (token, status) {
+        if (token === "0") {
+            debugMessage("- Error refreshing the token.");
+            return;
+        }
+        thisToken = token;
+        debugMessage("Updated token: " + thisToken);
+        sayMessage("Token updated.");
+        thisChatClient.updateToken(thisToken);
+    }).fail(function () {
+        sayMessage("- onTokenAboutToExpire: Error refreshing the chat client token, Status: " + status);
     });
 }
 
@@ -213,7 +230,7 @@ function joinChatChannel(chatChannelName, chatChannelDescription) {
                         + " SID: " + channel.sid
                         + " name: " + channel.friendlyName
                         );
-                sayMessage('+ You have joined the channel.');
+                sayMessage('+ You have joined the channel: ' + chatChannelName);
                 doPrompt();
             })
             .catch(function () {

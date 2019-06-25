@@ -21,7 +21,7 @@ var CHAT_API_KEY_SECRET = process.env.CHAT_API_KEY_SECRET;
 //  
 //  2. Or create a server side program to generate tokens
 //      and add the URL (command: url) to call the program,
-//      which are used in getTokenSeverSide() function.
+//      which is used in getTokenSeverSide() function.
 //  url https://about-time-2357.twil.io/tokenchat
 var CHAT_GENERATE_TOKEN_URL = process.env.CHAT_GENERATE_TOKEN_URL;
 //
@@ -33,7 +33,7 @@ var CHAT_GENERATE_TOKEN_URL = process.env.CHAT_GENERATE_TOKEN_URL;
 // ------------------------------
 // Run the following commands:
 //  $ npm install --save twilio-chat
-//  $ node --no-deprecation chatcli.js
+//  $ node chatcli.js
 //  ...
 //  + Command, Enter > user me
 //  + Command, Enter > url https://about-time-2357.twil.io/tokenchat
@@ -42,16 +42,24 @@ var CHAT_GENERATE_TOKEN_URL = process.env.CHAT_GENERATE_TOKEN_URL;
 //  
 // -----------------------------------------------------------------------------
 // To do:
-//  Auto token refresh using tokenAboutToExpire.
+// 
+//  Improve tokenAboutToExpire:
+//      Auto token refresh using tokenAboutToExpire.
+//      Create the update token using the same function as when it was first generated.
+//  
 //  Delete abc channel, current error: - Delete failed: SessionError: User unauthorized for command
 //      https://www.twilio.com/docs/chat/rest/users
 //      https://www.twilio.com/docs/chat/permissions
+//  
 //  Presence: 1) subscribe/unsubscribe to users. 2) Check who is online.
+//  
 //  SMS Chat gateway.
 //  Properly mantain the message count for a user for their current channel
 //  Make this npm available?
 //      https://docs.npmjs.com/creating-node-js-modules
 //
+//  Multi-user HTTP GET relay
+//  
 // -----------------------------------------------------------------------------
 // Chat docmentation links:
 //  Chat Presence:
@@ -82,7 +90,7 @@ var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
 // Required for SMS and HTTP
 var request = require('request');
 
-var RELAY_URL = 'http://localhost:8080';
+var RELAY_URL = 'http://localhost:8000';
 
 // -----------------------------------------------------------------------------
 function doHelp() {
@@ -245,9 +253,9 @@ function generateToken(theIdentity) {
     return(theToken);
 }
 
-function getTokenSeverSideSetClientObject(clientid) {
+function getTokenSeverSideSetClientObject(userIdentity) {
     var newToken = "";
-    debugMessage("getTokenSeverSideSetClientObject(" + clientid + ")");
+    debugMessage("getTokenSeverSideSetClientObject(" + userIdentity + ")");
     if (firstInit === "") {
         firstInit = "initialized";
         sayMessage("+ Ready for commands such as: help, init, or generate.");
@@ -264,7 +272,7 @@ function getTokenSeverSideSetClientObject(clientid) {
         doPrompt();
         return;
     }
-    var newTokenUrl = CHAT_GENERATE_TOKEN_URL + "?identity=" + clientid + "&device=cli";
+    var newTokenUrl = CHAT_GENERATE_TOKEN_URL + "?identity=" + userIdentity + "&device=cli";
     request(newTokenUrl, function (error, response, responseString) {
         if (error) {
             sayMessage('- error:', error);
@@ -312,6 +320,7 @@ function createChatClientObject(token) {
     // -------------------------------
     Chat.Client.create(token).then(chatClient => {
         thisChatClient = chatClient;
+        thisChatClient.on('tokenAboutToExpire', onTokenAboutToExpire);
         debugMessage("Chat client object created: thisChatClient: " + thisChatClient);
         sayMessage("++ Chat client object created for the user: " + userIdentity);
         // thisChatClient.getSubscribedChannels();
@@ -321,13 +330,27 @@ function createChatClientObject(token) {
                 const channel = paginator.items[i];
                 console.log('+++ Channel: ' + channel.friendlyName);
             }
+            if (firstInit === "") {
+                firstInit = "initialized";
+                sayMessage("+ Ready for commands such as: help or join.");
+            }
+            doPrompt();
         });
-        if (firstInit === "") {
-            firstInit = "initialized";
-            sayMessage("+ Ready for commands such as: help, init, or generate.");
-        }
-        doPrompt();
     });
+}
+
+function onTokenAboutToExpire() {
+    // david
+    debugMessage("onTokenExpiring: Refresh the token using client id: " + userIdentity);
+    token = generateToken(userIdentity);
+    if (token !== "") {
+        thisToken = token;
+        debugMessage("Updated token: " + thisToken);
+        sayMessage("Token updated.");
+        thisChatClient.updateToken(thisToken);
+    } else {
+        sayMessage("- onTokenAboutToExpire: Error refreshing the chat client token.");
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -355,7 +378,7 @@ function joinChatChannel(chatChannelName, chatChannelDescription) {
                         + " SID: " + channel.sid
                         + " name: " + channel.friendlyName
                         );
-                sayMessage('+ You have joined the channel.');
+                sayMessage('+ You have joined the channel: ' + chatChannelName);
                 doPrompt();
             })
             .catch(function () {
@@ -669,6 +692,9 @@ function test0() {
 
 // -----------------------------------------------------------------------------
 function doSendSms(theMessage) {
+    if (AUTH_TOKEN === undefined) {
+        sayMessage("-- Not authorized to send SMS.");
+    }
     var theType = "json";
     var theRequest = "https://" + ACCOUNT_SID + ":" + AUTH_TOKEN + "@" + "api.twilio.com/2010-04-01/Accounts/" + ACCOUNT_SID + "/Messages." + theType;
     // var basicAuth = "Basic " + new Buffer(ACCOUNT_SID + ":" + AUTH_TOKEN).toString("base64");
@@ -704,6 +730,9 @@ function doSendSms(theMessage) {
 // -----------------------------------------------------------------------------
 function listUsers() {
     sayMessage("+ List users.");
+    if (AUTH_TOKEN === undefined) {
+        sayMessage("-- Not authorized to list users.");
+    }
     // https://www.twilio.com/docs/chat/rest/users#properties
     const client = require('twilio')(ACCOUNT_SID, AUTH_TOKEN);
     var i = 1;
@@ -747,7 +776,7 @@ function doShow() {
     if (ACCOUNT_SID !== "") {
         sayMessage("++ Account SID: " + ACCOUNT_SID);
     }
-    if (AUTH_TOKEN !== "") {
+    if (AUTH_TOKEN !== undefined) {
         sayMessage("++ Account auth token is set.");
     }
     if (CHAT_SERVICE_SID !== "") {

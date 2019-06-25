@@ -11,7 +11,7 @@ let thisChannel;
 let thisToken;
 let totalMessages = 0; // This count of read channel messages needs work to initialize and maintain the count.
 
-clientId = "";
+userIdentity = "";
 chatChannelName = "";
 chatChannelDescription = "";
 // const Twilio = require('twilio');
@@ -19,8 +19,8 @@ chatChannelDescription = "";
 
 // -----------------------------------------------------------------------------
 function createChatClientObject() {
-    clientId = $("#username").val();
-    if (clientId === "") {
+    userIdentity = $("#username").val();
+    if (userIdentity === "") {
         logger("Required: Username.");
         addChatMessage("Enter a Username to use when chatting.");
         return;
@@ -28,10 +28,10 @@ function createChatClientObject() {
     addChatMessage("++ Creating Chat Client, please wait.");
     // Since, programs cannot make an Ajax call to a remote resource,
     // Need to do an Ajax call to a local program that goes and gets the token.
-    logger("Refresh the token using client id: " + clientId);
+    logger("Refresh the token using client id: " + userIdentity);
     //
     // I should use: $.getJSON
-    var jqxhr = $.get("generateToken?identity=" + clientId, function (token) {
+    var jqxhr = $.get("generateToken?identity=" + userIdentity, function (token) {
         if (token === "0") {
             logger("- Error refreshing the token.");
             return;
@@ -44,7 +44,7 @@ function createChatClientObject() {
         Twilio.Chat.Client.create(thisToken).then(chatClient => {
             logger("Chat client created: thisChatClient: " + thisChatClient);
             thisChatClient = chatClient;
-            addChatMessage("+ Chat client created for the user: " + clientId);
+            addChatMessage("+ Chat client created for the user: " + userIdentity);
             thisChatClient.getSubscribedChannels();
             // thisChatClient.getSubscribedChannels().then(joinChatChannel);
             setButtons("createChatClient");
@@ -67,8 +67,8 @@ function createChatClientObject() {
 }
 
 function onTokenAboutToExpire() {
-    logger("onTokenExpiring: Refresh the token using client id: " + clientId);
-    var jqxhr = $.get("generateToken?identity=" + clientId, function (token, status) {
+    logger("onTokenExpiring: Refresh the token using client id: " + userIdentity);
+    var jqxhr = $.get("generateToken?identity=" + userIdentity, function (token, status) {
         if (token === "0") {
             logger("- Error refreshing the token.");
             return;
@@ -80,7 +80,7 @@ function onTokenAboutToExpire() {
         thisChatClient.updateToken(thisToken);
         // -------------------------------
     }).fail(function () {
-        logger("- onTokenExpiring: Error refreshing the token and creating the chat client object. Status: " + status);
+        logger("- onTokenAboutToExpire: Error refreshing the chat client token.");
     });
 }
 
@@ -132,7 +132,7 @@ function joinChatChannel() {
 function joinChannel() {
     logger('Join the channel: ' + thisChannel.uniqueName);
     thisChannel.join().then(function (channel) {
-        logger('Joined channel as ' + clientId);
+        logger('Joined channel as ' + userIdentity);
         addChatMessage("+++ Channel joined. You can start chatting.");
         setButtons("join");
     }).catch(function (err) {
@@ -207,7 +207,7 @@ function deleteChannel() {
                 thisChannel.delete().then(function (channel) {
                     addChatMessage('+ Deleted channel: ' + chatChannelName);
                 }).catch(function (err) {
-                    if (thisChannel.createdBy !== clientId) {
+                    if (thisChannel.createdBy !== userIdentity) {
                         addChatMessage("- Can only be deleted by the creator: " + thisChannel.createdBy);
                     } else {
                         logger("- Delete failed: " + thisChannel.uniqueName + ', ' + err);
