@@ -82,6 +82,8 @@ var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
 // Required for SMS and HTTP
 var request = require('request');
 
+var RELAY_URL = 'http://localhost:8080';
+
 // -----------------------------------------------------------------------------
 function doHelp() {
     sayMessage("------------------------------------------------------------------------------\n\
@@ -403,18 +405,25 @@ function setChannelListnerFunctions() {
     });
 }
 
+const relayUriStart = '/http/get';
 function onMessageAdded(message) {
     // Other message properties: message.sid, message.friendlyName
     if (message.author === userIdentity) {
         debugMessage("> " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
     } else {
         sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
-        if (message.body.startsWith('/http/get')) {
+        if (message.body.startsWith(relayUriStart)) {
             // david
             // Example: /http/get/twiml?p1=abc&p2=def
             // Need to send the actual URL.
-            // var theUrl = 'https://tigerfarmpress.com/hello.txt';
-            var theUrl = 'http://localhost:8080/twiml.xml';
+            var theUrl = RELAY_URL + '/twiml.xml';
+            // var relayUri = message.body.substring(relayUriStart.length + 1).trim();
+            // if (relayUri.length > 0) {
+            //     RELAY_URL = "/" + theCommand.substring(commandLength).trim();
+            // } else {
+            //     RELAY_URL = "/";
+            // }
+            sayMessage("+ Get relay host response from: " + theUrl);
             request({method: "GET", url: theUrl},
                     function (error, response, body) {
                         debugMessage("Get response: " + body);
@@ -759,6 +768,11 @@ function doShow() {
     if (smsSendTo !== "") {
         sayMessage("++ SMS send to phone number:   " + smsSendTo);
     }
+    if (RELAY_URL === "") {
+        sayMessage("++ Relay host URL is required if relaying to a local host.");
+    } else {
+        sayMessage("++ Relay host URL: " + RELAY_URL);
+    }
 
 }
 
@@ -849,7 +863,15 @@ standard_input.on('data', function (inputString) {
         if (theCommand.length > commandLength) {
             CHAT_GENERATE_TOKEN_URL = theCommand.substring(commandLength).trim();
         } else {
-            sayMessage("+ Syntax: delete <channel>");
+            sayMessage("+ Syntax: url <URL to retrieve a token>");
+        }
+        doPrompt();
+    } else if (theCommand.startsWith('relay')) {
+        commandLength = 'relay'.length + 1;
+        if (theCommand.length > commandLength) {
+            RELAY_URL = theCommand.substring(commandLength).trim();
+        } else {
+            sayMessage("+ Syntax: relay <URL to the local relay host>");
         }
         doPrompt();
     } else if (theCommand === 'init') {
