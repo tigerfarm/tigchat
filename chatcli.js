@@ -413,7 +413,9 @@ function onMessageAdded(message) {
             // david
             // Example: /http/get/twiml?p1=abc&p2=def
             // Need to send the actual URL.
-            request({method: "GET", url: 'https://tigerfarmpress.com/hello.txt'},
+            // var theUrl = 'https://tigerfarmpress.com/hello.txt';
+            var theUrl = 'http://localhost:8080/twiml.xml';
+            request({method: "GET", url: theUrl},
                     function (error, response, body) {
                         debugMessage("Get response: " + body);
                         sayMessage("+ Got the response from the HTTP GET request.");
