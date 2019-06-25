@@ -620,10 +620,32 @@ function onMessageAdded(message) {
         debugMessage("> " + userIdentity + " : " + message.channel.uniqueName + ":" + thisChatChannelName + " : " + message.body);
     } else {
         sayMessage("< " + message.author + " : " + message.channel.uniqueName + " : " + message.body);
+        theResponse = message.body;
         if (userIdentity.startsWith("+") && thisChatChannelName.startsWith("+")) {
             doSendSms(userIdentity, thisChatChannelName, "Author: " + message.author + ", text: " + message.body);
         }
         // david, process the HTTP GET response, when it's returned.
+        if (theRes !== '') {
+            sayMessage('+ Check for HTTP GET response.');
+            const seconds = 3;
+            console.log("+ Wait for " + seconds + " seconds.");
+            var counter = 0;
+            while (counter < seconds) {
+                if (theResponse !== '') {
+                    break;
+                }
+                sleep(1);
+                counter++;
+                console.log("+ counter = " + counter);
+            }
+            if (theResponse === '') {
+                sayMessage('+ No HTTP GET response.');
+                theRes.send("+ No HTTP GET response.");
+            } else {
+                sayMessage("HTTP GET response: " + theResponse);
+                theRes.send("+ HTTP GET response: " + theResponse);
+            }
+        }
     }
     incCount();
     doPrompt();
@@ -640,6 +662,16 @@ const path = require('path');
 const url = require("url");
 const PORT = process.env.PORT || 8000;
 var app = express();
+
+var theResponse = '';
+function sleep(seconds) {
+    var waitTill = new Date(new Date().getTime() + seconds * 1000);
+    while (waitTill > new Date()) {
+        if (theResponse !== '') {
+            break;
+        }
+    }
+}
 
 // -----------------------------------------------------------------------------
 var theUrl = '';
@@ -725,15 +757,20 @@ app.get('/smstochat', function (req, res) {
     }
 });
 
-app.get('/send', function (req, res) {
+var theRes = '';
+app.get('/send', function (req, res, next) {
+    theRes = '';
     // http://localhost:8000/send?message=hello2
     if (req.query.message) {
         var smsBody = req.query.message;
+        theResponse = '';
         doSend("send " + smsBody);
         if (smsBody.startsWith('/http/get')) {
+            theRes = res;
+            sayMessage('+ HTTP GET request.');
             // david
-            // Wait for the HTTP GET response, and then send it back.
-            res.send("+ HTTP GET response needs to be sent back for the following request: " + smsBody);
+            sleep(1);
+            return;
         } else {
             res.send("+ Sent Chat message: " + smsBody);
         }
@@ -743,7 +780,7 @@ app.get('/send', function (req, res) {
 });
 
 app.get('/smssend', function (req, res) {
-    // /smssend?Body=hello
+// /smssend?Body=hello
     if (req.query.Body) {
         doSendSms(userIdentity, thisChatChannelName, req.query.Body);
         returnMessage = "+ Send SMS Message From: " + userIdentity + " To: " + thisChatChannelName + " : " + req.query.Body;
@@ -753,7 +790,6 @@ app.get('/smssend', function (req, res) {
         res.send('+ No SMS message to send.');
     }
 });
-
 app.get('/join', function (req, res) {
     // /join?channel=%2B16505552222
     if (req.query.channel) {
@@ -768,7 +804,6 @@ app.get('/generate', function (req, res) {
     createChatClientObject(generateToken(userIdentity));
     res.send('+ getToken Sever Side Set ClientObject.');
 });
-
 app.get('/set', function (req, res) {
     // /set?user=16505551111
     // /set?debug=on or off
@@ -789,19 +824,16 @@ app.get('/set', function (req, res) {
         res.send('- Required: set [ user "identity"|debug [on|off] ]');
     }
 });
-
 app.get('/show', function (req, res) {
     returnMessage = '';
     doShow();
     res.send(returnMessage);
 });
-
 app.get('/exit', function (req, res) {
     res.send("Exit server.");
     sayMessage("+++ Exit.");
     process.exit();
 });
-
 app.get('/generateToken', function (req, res) {
     sayMessage("+ Generate Chat Token.");
     if (req.query.identity) {
@@ -811,7 +843,6 @@ app.get('/generateToken', function (req, res) {
         res.send(0);
     }
 });
-
 // -----------------------------------------------------------------------------
 app.get('/echo', function (req, res) {
     if (req.query.SmsSid) {
@@ -820,7 +851,6 @@ app.get('/echo', function (req, res) {
         res.send('Nothing to echo.');
     }
 });
-
 // Documentation: http://expressjs.com/en/api.html
 //
 app.get('/hello', function (req, res) {
@@ -840,7 +870,6 @@ app.get('*', function (req, res, next) {
     console.log('+ * url: ' + url.parse(req.url).pathname);
     next();
 });
-
 // -----------------------------------------------------------------------------
 app.use(express.static('docroot'));
 app.use(function (err, req, res, next) {
