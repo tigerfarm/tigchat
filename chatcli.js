@@ -140,6 +140,11 @@ Commands:\n\
 ++ Set to phone number.\n\
 > sms from <phone number>\n\
 ++ Set from phone number.\n\
+\n\
+-------------------------\n\
+> HTTP Relay\n\
+relay <URL to the local relay host>\n\
+> relay http://localhost:8080\n\
 "
             );
 }
@@ -413,16 +418,12 @@ function onMessageAdded(message) {
     } else {
         sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
         if (message.body.startsWith(relayUriStart)) {
-            // david
             // Example: /http/get/twiml?p1=abc&p2=def
-            // Need to send the actual URL.
-            var theUrl = RELAY_URL + '/twiml.xml';
-            // var relayUri = message.body.substring(relayUriStart.length + 1).trim();
-            // if (relayUri.length > 0) {
-            //     RELAY_URL = "/" + theCommand.substring(commandLength).trim();
-            // } else {
-            //     RELAY_URL = "/";
-            // }
+            var relayUri = message.body.substring(relayUriStart.length).trim();
+            if (relayUri === '') {
+                relayUri = "/";
+            }
+            var theUrl = RELAY_URL + relayUri;
             sayMessage("+ Get relay host response from: " + theUrl);
             request({method: "GET", url: theUrl},
                     function (error, response, body) {
@@ -768,11 +769,13 @@ function doShow() {
     if (smsSendTo !== "") {
         sayMessage("++ SMS send to phone number:   " + smsSendTo);
     }
+    sayMessage("-----------------------");
     if (RELAY_URL === "") {
         sayMessage("++ Relay host URL is required if relaying to a local host.");
     } else {
         sayMessage("++ Relay host URL: " + RELAY_URL);
     }
+    sayMessage("-----------------------");
 
 }
 
