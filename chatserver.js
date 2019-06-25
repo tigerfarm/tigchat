@@ -643,7 +643,7 @@ function onMessageAdded(message) {
                 theRes.send("+ No HTTP GET response.");
             } else {
                 sayMessage("HTTP GET response: " + theResponse);
-                theRes.send("+ HTTP GET response: " + theResponse);
+                theRes.send(theResponse);
             }
         }
     }
