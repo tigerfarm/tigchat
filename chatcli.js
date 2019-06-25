@@ -97,6 +97,8 @@ Commands:\n\
 \n\
 > help\n\
 \n\
+> clear : clear the console window.\n\
+\n\
 > exit\n\
 \n\
 -------------------------\n\
@@ -202,6 +204,12 @@ function sayMessage(message) {
 }
 function sayRequirement(message) {
     console.log("- " + message);
+}
+
+function clearScreen() {
+    process.stdout.write('\x1Bc');
+    sayMessage('+ Running cli.');
+    doPrompt();
 }
 
 // -----------------------------------------------------------------------------
@@ -911,6 +919,8 @@ standard_input.on('data', function (inputString) {
             sayMessage("+ Debug on.");
         }
         doPrompt();
+    } else if (theCommand === 'clear') {
+        clearScreen();
     } else if (theCommand === 'help') {
         doHelp();
         doPrompt();
