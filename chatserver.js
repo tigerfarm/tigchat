@@ -624,10 +624,10 @@ function onMessageAdded(message) {
         if (userIdentity.startsWith("+") && thisChatChannelName.startsWith("+")) {
             doSendSms(userIdentity, thisChatChannelName, "Author: " + message.author + ", text: " + message.body);
         }
-        // david, process the HTTP GET response, when it's returned.
         if (theRes !== '') {
+            // Process the HTTP GET response, when it's returned.
             sayMessage('+ Check for HTTP GET response.');
-            const seconds = 3;
+            const seconds = 3;  // david, should be a settable value.
             console.log("+ Wait for " + seconds + " seconds.");
             var counter = 0;
             while (counter < seconds) {
@@ -702,7 +702,10 @@ app.get('*', function (request, res, next) {
 });
 
 // -----------------------------------------------------------------------------
+// HTTP GET relay requests.
 
+// david
+var theRes = '';
 app.get('/http/get/*', function (request, res) {
     // 
     // Future, make the following URL work, where "relay" is the channel name:
@@ -710,18 +713,27 @@ app.get('/http/get/*', function (request, res) {
     // Request received by the server:
     //      + /http/get/* : /http/get/relay/def ? "p1=abc&p2=def"
     // 
-    // Set setserver.js:
+    // To use, set setserver.js:
     //      var userIdentity = "relay";
     //      var theChannel = "relay";
-    // Run 2 times:
+    // Run 2 times.
     //      $ node setserver.js
-    // Then send a chat message:
+    // Then send make a relay request.
+    //      http://localhost:8000/http/get/hello.txt
+    //      http://localhost:8000/send?message=/http/get/hello.txt
+    //      
     //      http://localhost:8000/send?message=/http/get/twiml?p1=abc%26p2=def
     //      https://tigchat.herokuapp.com/send?message=/http/get/twiml?p1=abc%26p2=def
     //
     var urlComponentMessage = '+ /http/get/* : ' + theUrl + " ? " + JSON.stringify(theQueryJson);
     console.log(urlComponentMessage);
-    res.send(urlComponentMessage);
+    //
+    theResponse = '';
+    doSend("send " + theUrl);
+    theRes = res;
+    sayMessage('+ HTTP GET request.');
+    sleep(1);
+    return;
 });
 
 // -----------------------------------------------------------------------------
@@ -757,23 +769,13 @@ app.get('/smstochat', function (req, res) {
     }
 });
 
-var theRes = '';
 app.get('/send', function (req, res, next) {
     theRes = '';
     // http://localhost:8000/send?message=hello2
     if (req.query.message) {
         var smsBody = req.query.message;
-        theResponse = '';
         doSend("send " + smsBody);
-        if (smsBody.startsWith('/http/get')) {
-            theRes = res;
-            sayMessage('+ HTTP GET request.');
-            // david
-            sleep(1);
-            return;
-        } else {
-            res.send("+ Sent Chat message: " + smsBody);
-        }
+        res.send("+ Sent Chat message: " + smsBody);
     } else {
         res.send('+ No Chat message to send.');
     }
