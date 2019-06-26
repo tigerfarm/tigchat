@@ -344,13 +344,13 @@ function onTokenAboutToExpire() {
     debugMessage("onTokenExpiring: Refresh the token using client id: " + userIdentity);
     token = generateToken(userIdentity);
     if (token !== "") {
-        thisToken = token;
-        debugMessage("Updated token: " + thisToken);
-        sayMessage("Token updated.");
-        thisChatClient.updateToken(thisToken);
-    } else {
         sayMessage("- onTokenAboutToExpire: Error refreshing the chat client token.");
+        return;
     }
+    thisToken = token;
+    debugMessage("Updated token: " + thisToken);
+    thisChatClient.updateToken(thisToken);
+    sayMessage("Token updated.");
 }
 
 // -----------------------------------------------------------------------------
@@ -816,6 +816,19 @@ function doShow() {
 
 }
 
+function runProgram(theCommand) {
+    const exec = require('child_process').exec;
+    exec(theCommand, (error, stdout, stderr) => {
+        theResponse = `${stdout}`;
+        // console.log('+ theResponse: ');
+        console.log(theResponse.substring(0, theResponse.length - 1));
+        if (error !== null) {
+            console.log(`exec error: ${error}`);
+        }
+        doPrompt();
+    });
+}
+
 // -----------------------------------------------------------------------------
 // Prompt the user for commands.
 // Parse and run execute the commands.
@@ -956,6 +969,10 @@ standard_input.on('data', function (inputString) {
     } else if (theCommand === 'exit') {
         console.log("+++ Exit.");
         process.exit();
+    } else if (theCommand === 'ls') {
+        runProgram('ls');
+    } else if (theCommand === 'time' || theCommand === 'date') {
+        runProgram('date');
         // ---------------------------------------------------
     } else if (theCommand.startsWith('sms')) {
         // sms to <phone number>
