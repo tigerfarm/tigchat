@@ -29,7 +29,13 @@ var CHAT_GENERATE_TOKEN_URL = process.env.CHAT_GENERATE_TOKEN_URL;
 //  https://www.twilio.com/console/runtime/functions/manage
 // Twilio Function code to generate a token:
 //  https://github.com/tigerfarm/owlchat/blob/master/generateToken.js
-//  
+//
+// The following is used the updating an about to expire token.
+//      Use the same method to update, as was last used to generate the token.
+const TOKEN_METHOD_URL = 'URL';
+const TOKEN_METHOD_ENVIRONMENT_VARIABLES = 'ENV';
+var TOKEN_METHOD = '';
+
 // ------------------------------
 // Run the following commands:
 //  $ npm install --save twilio-chat
@@ -154,7 +160,7 @@ Commands:\n\
 -------------------------\n\
 > HTTP Relay\n\
 relay <URL to the local relay host>\n\
-> relay http://localhost:8080\n\
+> relay http://localhost:8000\n\
 "
             );
 }
@@ -180,7 +186,6 @@ var setChannelListeners = "";
 var thisChatClient = "";
 var thisChatChannelName = "";
 var chatChannelDescription = "";
-let thisToken = "";
 let thisChannel = "";
 
 // This is to count channel messages read. Needs work to initialize and maintain the count.
@@ -250,12 +255,13 @@ function generateToken(theIdentity) {
     // Output the token.
     theToken = token.toJwt();
     debugMessage("+ theToken " + theToken);
+    TOKEN_METHOD = TOKEN_METHOD_ENVIRONMENT_VARIABLES;
     return(theToken);
 }
 
-function getTokenSeverSideSetClientObject(userIdentity) {
+function getTokenSeverSide(userIdentity, createClientObject) {
     var newToken = "";
-    debugMessage("getTokenSeverSideSetClientObject(" + userIdentity + ")");
+    debugMessage("getTokenSeverSide(" + userIdentity + ", createClientObject :" + createClientObject + ")");
     if (firstInit === "") {
         firstInit = "initialized";
         sayMessage("+ Ready for commands such as: help, init, or generate.");
@@ -290,18 +296,12 @@ function getTokenSeverSideSetClientObject(userIdentity) {
         }
         debugMessage('token: ' + newToken);
         sayMessage("+ New token retrieved.");
-        createChatClientObject(newToken);
+        TOKEN_METHOD = TOKEN_METHOD_URL;
+        if (createClientObject) {
+            createChatClientObject(newToken);
+        }
         return;
     });
-}
-
-function refreshChatToken() {
-    // Not tested.
-    debugMessage("refreshChatToken()");
-    generateToken(userIdentity);
-    thisChannel.updateToken(token);
-    sayMessage("+ Chat token refreshed.");
-    doPrompt();
 }
 
 // -----------------------------------------------------------------------------
@@ -340,16 +340,21 @@ function createChatClientObject(token) {
 }
 
 function onTokenAboutToExpire() {
-    // david
-    debugMessage("onTokenExpiring: Refresh the token using client id: " + userIdentity);
-    token = generateToken(userIdentity);
-    if (token !== "") {
+    debugMessage("onTokenAboutToExpire: Refresh the token using client id: " + userIdentity);
+    updateToken = '';
+    if (TOKEN_METHOD === TOKEN_METHOD_ENVIRONMENT_VARIABLES) {
+        updateToken = generateToken(userIdentity);
+    } else {
+        // david, need to test.
+        var createClientObject = false;
+        updateToken = getTokenSeverSide(userIdentity, createClientObject);
+    }
+    if (updateToken === '') {
         sayMessage("- onTokenAboutToExpire: Error refreshing the chat client token.");
         return;
     }
-    thisToken = token;
-    debugMessage("Updated token: " + thisToken);
-    thisChatClient.updateToken(thisToken);
+    debugMessage("Updated token: " + updateToken);
+    thisChatClient.updateToken(updateToken);
     sayMessage("Token updated.");
 }
 
@@ -434,10 +439,6 @@ function setChannelListnerFunctions() {
     //
     thisChannel.on('messageAdded', function (message) {
         onMessageAdded(message);
-    });
-    //
-    thisChannel.on('tokenAboutToExpire', function () {
-        refreshChatToken();
     });
 }
 
@@ -793,6 +794,11 @@ function doShow() {
     } else {
         sayMessage("++ Token URL: " + CHAT_GENERATE_TOKEN_URL);
     }
+    if (TOKEN_METHOD === "") {
+        sayMessage("++ Token method not set.");
+    } else {
+        sayMessage("++ Token method: " + TOKEN_METHOD);
+    }
     sayMessage("-----------------------");
     if (debugState === 0) {
         sayMessage("++ Debug: off");
@@ -928,7 +934,8 @@ standard_input.on('data', function (inputString) {
         }
         doPrompt();
     } else if (theCommand === 'init') {
-        getTokenSeverSideSetClientObject(userIdentity);
+        var createClientObject = true;
+        getTokenSeverSide(userIdentity, createClientObject);
     } else if (theCommand === 'generate') {
         createChatClientObject(generateToken(userIdentity));
     } else if (theCommand === 'users') {
