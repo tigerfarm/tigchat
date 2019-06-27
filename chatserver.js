@@ -663,7 +663,7 @@ function onMessageAdded(message) {
         if (userIdentity.startsWith("+") && thisChatChannelName.startsWith("+")) {
             doSendSms(userIdentity, thisChatChannelName, "Author: " + message.author + ", text: " + message.body);
         }
-        if (theRes !== '') {
+        if (httpResponseObject !== '') {
             // Process the HTTP GET response, when it's returned.
             sayMessage('+ Check for HTTP GET response.');
             const seconds = 3;  // david, should be a settable value.
@@ -679,10 +679,10 @@ function onMessageAdded(message) {
             }
             if (theResponse === '') {
                 sayMessage('+ No HTTP GET response.');
-                theRes.send("+ No HTTP GET response.");
+                httpResponseObject.send("+ No HTTP GET response.");
             } else {
                 sayMessage("HTTP GET response: " + theResponse);
-                theRes.send(theResponse);
+                httpResponseObject.send(theResponse);
             }
         }
     }
@@ -717,18 +717,20 @@ var theUrl = '';
 var theQueryJson = '';
 app.get('*', function (request, res, next) {
     console.log("------------------");
-    console.log("+ HTTP headers:");
-    var theHeaders = JSON.stringify(request.headers).split('","');
-    for (var i = 0; i < theHeaders.length; i++) {
-        if (i === 0) {
-            console.log('++ ' + theHeaders[i].substring(1, theHeaders[i].length) + '"');
-        } else if (i === theHeaders.length - 1) {
-            console.log('++ "' + theHeaders[i] + '');
-        } else {
-            console.log('++ "' + theHeaders[i].substring(0, theHeaders[i].length - 1) + '"');
+    if (debugState !== 0) {
+        console.log("+ HTTP headers:");
+        var theHeaders = JSON.stringify(request.headers).split('","');
+        for (var i = 0; i < theHeaders.length; i++) {
+            if (i === 0) {
+                console.log('++ ' + theHeaders[i].substring(1, theHeaders[i].length) + '"');
+            } else if (i === theHeaders.length - 1) {
+                console.log('++ "' + theHeaders[i] + '');
+            } else {
+                console.log('++ "' + theHeaders[i].substring(0, theHeaders[i].length - 1) + '"');
+            }
         }
+        console.log("---");
     }
-    console.log("---");
     theUrl = url.parse(request.url).pathname;
     theQueryJson = url.parse(request.url).query;
     var theQueryString = '';
@@ -744,7 +746,7 @@ app.get('*', function (request, res, next) {
 // HTTP GET relay requests.
 
 // david
-var theRes = '';
+var httpResponseObject = '';
 app.get('/http/get/*', function (request, res) {
     // 
     // Future, make the following URL work, where "relay" is the channel name:
@@ -769,7 +771,7 @@ app.get('/http/get/*', function (request, res) {
     //
     theResponse = '';
     doSend("send " + theUrl);
-    theRes = res;
+    httpResponseObject = res;
     sayMessage('+ HTTP GET request.');
     sleep(1);
     return;
@@ -809,7 +811,7 @@ app.get('/smstochat', function (req, res) {
 });
 
 app.get('/send', function (req, res, next) {
-    theRes = '';
+    httpResponseObject = '';
     // http://localhost:8000/send?message=hello2
     if (req.query.message) {
         var smsBody = req.query.message;
