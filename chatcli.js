@@ -161,6 +161,7 @@ Commands:\n\
 ++ Set the HTTP Relay host.\n\
 relay <URL to the local relay host>\n\
 > relay http://localhost:8000\n\
+> relay off\n\
 "
             );
 }
@@ -478,8 +479,8 @@ function doRelayHttpGetRequest(relayUri) {
     //  HTTP GET Relay Request
     //  
     if (RELAY_URL === '') {
-        sayRequirement("Since the relay host is not set, this is not an HTTP GET Relay node.");
-        doPrompt();
+        debugMessage("Since the relay host is not set, this is not an HTTP GET Relay node.");
+        // doPrompt();
         return;
     }
     if (relayUri === '') {
@@ -826,7 +827,7 @@ function doShow() {
     }
     sayMessage("-----------------------");
     if (RELAY_URL === "") {
-        sayMessage("++ Relay host URL is required if relaying to a local host.");
+        sayMessage("++ Relay host URL is not set. Therefore, this is not a relay host.");
     } else {
         sayMessage("++ Relay host URL: " + RELAY_URL);
     }
@@ -941,8 +942,11 @@ standard_input.on('data', function (inputString) {
         commandLength = 'relay'.length + 1;
         if (theCommand.length > commandLength) {
             RELAY_URL = theCommand.substring(commandLength).trim();
+            if (RELAY_URL === 'off') {
+                RELAY_URL = '';
+            }
         } else {
-            sayMessage("+ Syntax: relay <URL to the local relay host>");
+            sayMessage("+ Syntax: relay <<URL to the local relay host> | off>");
         }
         doPrompt();
     } else if (theCommand === 'init') {
