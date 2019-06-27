@@ -386,6 +386,11 @@ function joinChatChannel(chatChannelName, chatChannelDescription) {
                         + " name: " + channel.friendlyName
                         );
                 sayMessage('+ You have joined the channel: ' + chatChannelName);
+                if (sendMode === 0) {
+                    sayMessage("+ You are now in send mode.");
+                    thePromptPrefix = "+ Send, ";
+                    sendMode = 1;
+                }
                 doPrompt();
             })
             .catch(function () {
