@@ -55,7 +55,27 @@ var CHAT_SERVICE_SID = process.env.CHAT_SERVICE_SID;
 //  https://www.twilio.com/console/chat/runtime/api-keys
 var CHAT_API_KEY = process.env.CHAT_API_KEY;
 var CHAT_API_KEY_SECRET = process.env.CHAT_API_KEY_SECRET;
-//  
+//
+// The following is used the updating an about to expire token.
+//      Use the same method to update, as was last used to generate the token.
+const TOKEN_METHOD_URL = 'URL';
+const TOKEN_METHOD_ENVIRONMENT_VARIABLES = 'ENV';
+var TOKEN_METHOD = '';
+
+// -----------------------------------------------------------------------------
+// Required for SMS:
+var AUTH_TOKEN = process.env.AUTH_TOKEN;
+//
+// Defaults:
+var smsSendFrom = process.env.PHONE_NUMBER3;    // sms from <phone number>
+var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
+
+// Required for SMS and HTTP
+var request = require('request');
+
+// Not used in chatserver.js because it does not relay.
+var RELAY_URL = 'http://localhost:8000';
+
 // ----------------------------------
 function generateToken(theIdentity) {
     // Documentation: https://www.twilio.com/docs/api/rest/access-tokens
@@ -84,16 +104,9 @@ function generateToken(theIdentity) {
     // Output the token.
     theToken = token.toJwt();
     debugMessage("+ theToken " + theToken);
+    TOKEN_METHOD = TOKEN_METHOD_ENVIRONMENT_VARIABLES;
     return(theToken);
 }
-
-// -----------------------------------------------------------------------------
-// Required for SMS:
-var AUTH_TOKEN = process.env.AUTH_TOKEN;
-//
-// Defaults:
-var smsSendFrom = process.env.PHONE_NUMBER3;    // sms from <phone number>
-var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
 
 // -----------------------------------------------------------------------------
 console.log("+++ Chat program is starting up.");
@@ -190,19 +203,23 @@ function createChatClientObject(token) {
 
 function onTokenAboutToExpire() {
     // david
-    debugMessage("onTokenExpiring: Refresh the token using client id: " + userIdentity);
-    var jqxhr = $.get("generateToken?identity=" + userIdentity, function (token, status) {
-        if (token === "0") {
-            debugMessage("- Error refreshing the token.");
-            return;
-        }
-        thisToken = token;
-        debugMessage("Updated token: " + thisToken);
-        sayMessage("Token updated.");
-        thisChatClient.updateToken(thisToken);
-    }).fail(function () {
-        sayMessage("- onTokenAboutToExpire: Error refreshing the chat client token, Status: " + status);
-    });
+    debugMessage("onTokenAboutToExpire: Refresh the token using client id: " + userIdentity);
+    updateToken = '';
+    if (TOKEN_METHOD === TOKEN_METHOD_ENVIRONMENT_VARIABLES) {
+        updateToken = generateToken(userIdentity);
+    } else {
+        // david, need to test.
+        var createClientObject = false;
+        // Not available at this time in chatserver.js
+        // updateToken = getTokenSeverSide(userIdentity, createClientObject);
+    }
+    if (updateToken === '') {
+        sayMessage("- onTokenAboutToExpire: Error refreshing the chat client token.");
+        return;
+    }
+    debugMessage("Updated token: " + updateToken);
+    thisChatClient.updateToken(updateToken);
+    sayMessage("Token updated.");
 }
 
 // -----------------------------------------------------------------------------
@@ -569,6 +586,11 @@ function doShow() {
     }
     if (CHAT_API_KEY_SECRET !== "") {
         sayMessage("++ Chat API key secret is set.");
+    }
+    if (TOKEN_METHOD === "") {
+        sayMessage("++ Token method not set.");
+    } else {
+        sayMessage("++ Token method: " + TOKEN_METHOD);
     }
     sayMessage("-----------------------");
     if (debugState === 0) {

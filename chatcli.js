@@ -36,6 +36,19 @@ const TOKEN_METHOD_URL = 'URL';
 const TOKEN_METHOD_ENVIRONMENT_VARIABLES = 'ENV';
 var TOKEN_METHOD = '';
 
+// -----------------------------------------------------------------------------
+// Required for SMS:
+var AUTH_TOKEN = process.env.AUTH_TOKEN;
+//
+// Values can be set using the Chat CLI command: sms.
+var smsSendFrom = process.env.PHONE_NUMBER3;    // sms from <phone number>
+var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
+
+// Required for SMS and HTTP
+var request = require('request');
+
+var RELAY_URL = 'http://localhost:8000';
+
 // ------------------------------
 // Run the following commands:
 //  $ npm install --save twilio-chat
@@ -84,19 +97,6 @@ var TOKEN_METHOD = '';
 //      https://www.youtube.com/watch?v=rTsz09zRuTU
 //      https://www.twilio.com/blog/how-to-build-a-cli-with-node-js
 //  
-
-// -----------------------------------------------------------------------------
-// Required for SMS:
-var AUTH_TOKEN = process.env.AUTH_TOKEN;
-//
-// Values can be set using the Chat CLI command: sms.
-var smsSendFrom = process.env.PHONE_NUMBER3;    // sms from <phone number>
-var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
-
-// Required for SMS and HTTP
-var request = require('request');
-
-var RELAY_URL = 'http://localhost:8000';
 
 // -----------------------------------------------------------------------------
 function doHelp() {
@@ -251,6 +251,7 @@ function generateToken(theIdentity) {
     });
     token.addGrant(chatGrant);
     token.identity = theIdentity;
+    token.ttl = 1200;          // Token time to live, in seconds. 1200 = 20 minutes.
     //
     // Output the token.
     theToken = token.toJwt();
@@ -432,6 +433,20 @@ function joinChannel() {
     // }
 }
 
+function doCountZero() {
+    debugMessage("+ Called: doCountZero(): thisChannel.setNoMessagesConsumed();");
+    totalMessages = 0;
+    thisChannel.setNoMessagesConsumed();
+}
+
+function incCount() {
+    totalMessages++;
+    debugMessage('+ Increment Total Messages:' + totalMessages);
+    thisChannel.getMessages().then(function (messages) {
+        thisChannel.updateLastConsumedMessageIndex(totalMessages);
+    });
+}
+
 function setChannelListnerFunctions() {
     // Only set this once, else can cause issues when re-joining or joining other channels.
     setChannelListeners = "joined";
@@ -450,37 +465,30 @@ function onMessageAdded(message) {
     } else {
         sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
         if (message.body.startsWith(relayUriStart)) {
+            //
+            //  HTTP GET Relay Request
+            //  
             // Example: /http/get/twiml?p1=abc&p2=def
             var relayUri = message.body.substring(relayUriStart.length).trim();
-            if (relayUri === '') {
-                relayUri = "/";
-            }
-            var theUrl = RELAY_URL + relayUri;
-            sayMessage("+ Get relay host response from: " + theUrl);
-            request({method: "GET", url: theUrl},
-                    function (error, response, body) {
-                        debugMessage("Get response: " + body);
-                        sayMessage("+ Got the response from the HTTP GET request.");
-                        doSend("send " + body);
-                    });
+            doRelayHttpGetRequest(relayUri);
         }
     }
     incCount();
     doPrompt();
 }
 
-function incCount() {
-    totalMessages++;
-    debugMessage('+ Increment Total Messages:' + totalMessages);
-    thisChannel.getMessages().then(function (messages) {
-        thisChannel.updateLastConsumedMessageIndex(totalMessages);
-    });
-}
-
-function doCountZero() {
-    debugMessage("+ Called: doCountZero(): thisChannel.setNoMessagesConsumed();");
-    totalMessages = 0;
-    thisChannel.setNoMessagesConsumed();
+function doRelayHttpGetRequest(relayUri) {
+    if (relayUri === '') {
+        relayUri = "/";
+    }
+    var theUrl = RELAY_URL + relayUri;
+    sayMessage("+ Get relay host response from: " + theUrl);
+    request({method: "GET", url: theUrl},
+            function (error, response, body) {
+                debugMessage("Get response: " + body);
+                sayMessage("+ Got the response from the HTTP GET request.");
+                doSend("send " + body);
+            });
 }
 
 // -----------------------------------------------------------------------------
