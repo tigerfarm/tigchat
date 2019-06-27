@@ -74,7 +74,7 @@ var smsSendTo = process.env.PHONE_NUMBER4;      // sms to <phone number>
 var request = require('request');
 
 // Not used in chatserver.js because it does not relay.
-var RELAY_URL = 'http://localhost:8000';
+var RELAY_URL = '';
 
 // ----------------------------------
 function generateToken(theIdentity) {

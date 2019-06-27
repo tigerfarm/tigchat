@@ -158,7 +158,7 @@ Commands:\n\
 ++ Set from phone number.\n\
 \n\
 -------------------------\n\
-> HTTP Relay\n\
+++ Set the HTTP Relay host.\n\
 relay <URL to the local relay host>\n\
 > relay http://localhost:8000\n\
 "
@@ -457,20 +457,16 @@ function setChannelListnerFunctions() {
     });
 }
 
-const relayUriStart = '/http/get';
+const RELAY_REST_API_GET_PREFIX = '/http/get';
 function onMessageAdded(message) {
     // Other message properties: message.sid, message.friendlyName
     if (message.author === userIdentity) {
         debugMessage("> " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
     } else {
         sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
-        if (message.body.startsWith(relayUriStart)) {
-            //
-            //  HTTP GET Relay Request
-            //  
+        if (message.body.startsWith(RELAY_REST_API_GET_PREFIX)) {
             // Example: /http/get/twiml?p1=abc&p2=def
-            var relayUri = message.body.substring(relayUriStart.length).trim();
-            doRelayHttpGetRequest(relayUri);
+            doRelayHttpGetRequest(message.body.substring(RELAY_REST_API_GET_PREFIX.length).trim());
         }
     }
     incCount();
@@ -478,6 +474,14 @@ function onMessageAdded(message) {
 }
 
 function doRelayHttpGetRequest(relayUri) {
+    //
+    //  HTTP GET Relay Request
+    //  
+    if (RELAY_URL === '') {
+        sayRequirement("Since the relay host is not set, this is not an HTTP GET Relay node.");
+        doPrompt();
+        return;
+    }
     if (relayUri === '') {
         relayUri = "/";
     }
