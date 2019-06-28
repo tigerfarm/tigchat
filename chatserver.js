@@ -620,7 +620,7 @@ function doShow() {
 if (userIdentity !== "") {
     token = generateToken(userIdentity);
     if (token !== "") {
-        createChatClientObject(token,userJoinChannel);
+        createChatClientObject(token, userJoinChannel);
     }
 } else {
     firstInit = "initialized";
@@ -674,7 +674,7 @@ function onMessageAdded(message) {
         }
         if (httpResponseObject !== '') {
             // Process the HTTP GET response, when it's returned.
-            sayMessage('+ Check for HTTP GET response.');
+            sayMessage('+ Check for HTTP GET response :' + httpRequestUri + ':');
             const seconds = 3;  // david, should be a settable value.
             console.log("+ Wait for " + seconds + " seconds.");
             var counter = 0;
@@ -723,8 +723,9 @@ function sleep(seconds) {
 }
 
 // -----------------------------------------------------------------------------
-var theUrl = '';
-var theQueryJson = '';
+var httpRequestUri = '';
+var httpRequestQueryJson = '';
+var httpRequestQueryString = '';
 app.get('*', function (request, res, next) {
     console.log("------------------");
     if (debugState !== 0) {
@@ -741,13 +742,16 @@ app.get('*', function (request, res, next) {
         }
         console.log("---");
     }
-    theUrl = url.parse(request.url).pathname;
-    theQueryJson = url.parse(request.url).query;
+    httpRequestUri = url.parse(request.url).pathname;
+    httpRequestQueryJson = url.parse(request.url).query;
     var theQueryString = '';
-    if (theQueryJson !== null) {
-        theQueryString = " ? " + JSON.stringify(theQueryJson);
+    httpRequestQueryString = '';
+    if (httpRequestQueryJson !== null) {
+        theQueryString = JSON.stringify(httpRequestQueryJson);
+        httpRequestQueryString = theQueryString.substring(1, theQueryString.length - 1);
+        theQueryString = " ? " + httpRequestQueryString;
     }
-    var urlComponentMessage = '+ URL components : ' + request.method + ' ' + theUrl + theQueryString;
+    var urlComponentMessage = '+ URL components : ' + request.method + ' :' + httpRequestUri + ":" + theQueryString;
     console.log(urlComponentMessage);
     next();
 });
@@ -758,6 +762,7 @@ app.get('*', function (request, res, next) {
 
 // david
 var httpResponseObject = '';
+const RELAY_REST_API_GET_PREFIX = '/http/get';
 app.get('/http/get/*', function (request, res) {
     // 
     // Future, make the following URL work, where "relay" is the channel name:
@@ -777,14 +782,23 @@ app.get('/http/get/*', function (request, res) {
     //      http://localhost:8000/send?message=/http/get/twiml?p1=abc%26p2=def
     //      https://tigchat.herokuapp.com/send?message=/http/get/twiml?p1=abc%26p2=def
     //
-    var urlComponentMessage = '+ /http/get/* : ' + theUrl + " ? " + JSON.stringify(theQueryJson);
-    console.log(urlComponentMessage);
-    //
     theResponse = '';
-    doSend("send " + theUrl);
+    if (httpRequestQueryString) {
+        sayMessage('+ Chat message :' + httpRequestUri + "?" + httpRequestQueryString + ':');
+        doSend("send " + httpRequestUri + "?" + httpRequestQueryString);
+    } else {
+        sayMessage('+ Chat message :' + httpRequestUri + ':');
+        doSend("send " + httpRequestUri);
+    }
     httpResponseObject = res;
     sayMessage('+ HTTP GET request.');
     sleep(1);
+    if (httpRequestUri.endsWith(".xml")) {
+        httpResponseObject.header('Content-Type', ' text/xml');
+    } else {
+        httpResponseObject.header('Content-Type', 'text/plain');
+    }
+
     return;
 });
 
@@ -844,20 +858,8 @@ app.get('/smssend', function (req, res) {
         res.send('+ No SMS message to send.');
     }
 });
-app.get('/join', function (req, res) {
-    // /join?channel=%2B16505552222
-    if (req.query.channel) {
-        thisChatChannelName = decodeURIComponent(req.query.channel);
-        joinChatChannel(thisChatChannelName, thisChatChannelName);
-        res.send('+ channel :' + thisChatChannelName + ':');
-    } else {
-        res.send('- Required: channel.');
-    }
-});
-app.get('/generate', function (req, res) {
-    createChatClientObject(generateToken(userIdentity), '');
-    res.send('+ getToken Sever Side Set ClientObject.');
-});
+
+// -----------------------------------------------------------------------------
 app.get('/set', function (req, res) {
     // /set?user=16505551111
     // /set?debug=on or off
@@ -877,6 +879,27 @@ app.get('/set', function (req, res) {
     } else {
         res.send('- Required: set [ user "identity"|debug [on|off] ]');
     }
+});
+app.get('/join', function (req, res) {
+    // /join?channel=%2B16505552222
+    if (req.query.channel) {
+        thisChatChannelName = decodeURIComponent(req.query.channel);
+        joinChatChannel(thisChatChannelName, thisChatChannelName);
+        res.send('+ channel :' + thisChatChannelName + ':');
+    } else {
+        res.send('- Required: channel.');
+    }
+});
+app.get('/generate', function (req, res) {
+    // /generate?channel=relay
+    if (req.query.user) {
+        userIdentity = req.query.user;
+    }
+    if (req.query.channel) {
+        thisChatChannelName = decodeURIComponent(req.query.channel);
+    }
+    createChatClientObject(generateToken(userIdentity), thisChatChannelName);
+    res.send('+ getToken Sever Side Set ClientObject.');
 });
 app.get('/show', function (req, res) {
     returnMessage = '';
@@ -921,7 +944,7 @@ app.get('/hello/:id', function (req, res) {
     res.send('+ hello there 2');
 });
 app.get('*', function (req, res, next) {
-    console.log('+ * url: ' + url.parse(req.url).pathname);
+    console.log('+ * uri: ' + url.parse(req.url).pathname);
     next();
 });
 // -----------------------------------------------------------------------------

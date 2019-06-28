@@ -480,7 +480,7 @@ function onMessageAdded(message) {
     } else {
         sayMessage("< " + message.channel.uniqueName + " : " + message.author + " : " + message.body);
         if (message.body.startsWith(RELAY_REST_API_GET_PREFIX)) {
-            // Example: /http/get/twiml?p1=abc&p2=def
+            // Example: /http/get/twiml.xml?p1=abc&p2=def
             doRelayHttpGetRequest(message.body.substring(RELAY_REST_API_GET_PREFIX.length).trim());
         }
     }
