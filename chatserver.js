@@ -202,7 +202,6 @@ function createChatClientObject(token) {
 }
 
 function onTokenAboutToExpire() {
-    // david
     debugMessage("onTokenAboutToExpire: Refresh the token using client id: " + userIdentity);
     updateToken = '';
     if (TOKEN_METHOD === TOKEN_METHOD_ENVIRONMENT_VARIABLES) {
@@ -460,6 +459,7 @@ function doSend(theCommand) {
         commandLength = 'send'.length + 1;
         sayRequirement("+ To the chat channel: " + thisChatChannelName + ", Send: " + theCommand.substring(commandLength));
         if (theCommand.length > commandLength) {
+            // david, need error handling on this:
             thisChannel.sendMessage(theCommand.substring(commandLength));
         } else {
             if (sendMode === 0) {
