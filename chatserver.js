@@ -115,6 +115,10 @@ var userIdentity = process.argv[2] || "";
 if (userIdentity !== "") {
     console.log("+ User identity: " + userIdentity);
 }
+var userJoinChannel = process.argv[3] || "";
+if (userJoinChannel !== "") {
+    console.log("+ User channel to join: " + userJoinChannel);
+}
 
 // $ npm install --save twilio-chat
 const Chat = require('twilio-chat');
@@ -138,7 +142,7 @@ var totalMessages = 0;
 
 // -----------------------------------------------------------------------------
 var debugState = 0;    // 0 off
-var debugOnOff = process.argv[3] || "";
+var debugOnOff = process.argv[4] || "";
 if (debugOnOff === "debug") {
     debugState = 1;    // 1 on
     debugMessage("Debug on.");
@@ -168,7 +172,7 @@ function doPrompt() {
 }
 
 // -----------------------------------------------------------------------------
-function createChatClientObject(token) {
+function createChatClientObject(token, theChannel) {
     if (userIdentity === "") {
         sayRequirement("Required: user identity for creating a chat object.");
         doPrompt();
@@ -189,35 +193,40 @@ function createChatClientObject(token) {
         // thisChatClient.getSubscribedChannels();
         thisChatClient.getSubscribedChannels().then(function (paginator) {
             sayMessage("++ Chat client Subscribed Channels: ");
+            if (firstInit === "") {
+                firstInit = "initialized";
+            }
             for (i = 0; i < paginator.items.length; i++) {
                 const channel = paginator.items[i];
                 console.log('+++ Channel: ' + channel.friendlyName);
             }
+            if (theChannel !== '') {
+                console.log('+ Join Channel: ' + theChannel);
+                joinChatChannel(theChannel, '');
+            } else {
+                doPrompt();
+            }
         });
-        if (firstInit === "") {
-            firstInit = "initialized";
-        }
-        doPrompt();
     });
 }
 
 function onTokenAboutToExpire() {
     debugMessage("onTokenAboutToExpire: Refresh the token using client id: " + userIdentity);
-    updateToken = '';
+    theUpdateToken = '';
     if (TOKEN_METHOD === TOKEN_METHOD_ENVIRONMENT_VARIABLES) {
-        updateToken = generateToken(userIdentity);
+        theUpdateToken = generateToken(userIdentity);
     } else {
         // david, need to test.
         var createClientObject = false;
         // Not available at this time in chatserver.js
-        // updateToken = getTokenSeverSide(userIdentity, createClientObject);
+        // theUpdateToken = getTokenSeverSide(userIdentity, createClientObject);
     }
-    if (updateToken === '') {
+    if (theUpdateToken === '') {
         sayMessage("- onTokenAboutToExpire: Error refreshing the chat client token.");
         return;
     }
-    debugMessage("Updated token: " + updateToken);
-    thisChatClient.updateToken(updateToken);
+    debugMessage("Updated token: " + theUpdateToken);
+    thisChatClient.updateToken(theUpdateToken);
     sayMessage("Token updated.");
 }
 
@@ -554,7 +563,7 @@ function listUsers() {
 // -----------------------------------------------------------------------------
 function doShow() {
     sayMessage("------------------------------------------------------------------------------");
-    sayMessage("+ Show chat client attribute settings:");
+    sayMessage("+ Show chat client attribute settings: ");
     if (thisChatChannelName) {
         sayMessage("++ Joined to channel: " + thisChatChannelName);
     } else {
@@ -611,7 +620,7 @@ function doShow() {
 if (userIdentity !== "") {
     token = generateToken(userIdentity);
     if (token !== "") {
-        createChatClientObject(token);
+        createChatClientObject(token,userJoinChannel);
     }
 } else {
     firstInit = "initialized";
@@ -684,6 +693,7 @@ function onMessageAdded(message) {
                 sayMessage("HTTP GET response: " + theResponse);
                 httpResponseObject.send(theResponse);
             }
+            httpResponseObject = '';
         }
     }
     incCount();
@@ -735,7 +745,7 @@ app.get('*', function (request, res, next) {
     theQueryJson = url.parse(request.url).query;
     var theQueryString = '';
     if (theQueryJson !== null) {
-        theQueryString = " ? " + JSON.stringify(theQueryString);
+        theQueryString = " ? " + JSON.stringify(theQueryJson);
     }
     var urlComponentMessage = '+ URL components : ' + request.method + ' ' + theUrl + theQueryString;
     console.log(urlComponentMessage);
@@ -744,6 +754,7 @@ app.get('*', function (request, res, next) {
 
 // -----------------------------------------------------------------------------
 // HTTP GET relay requests.
+// The response will be from a chat message.
 
 // david
 var httpResponseObject = '';
@@ -844,7 +855,7 @@ app.get('/join', function (req, res) {
     }
 });
 app.get('/generate', function (req, res) {
-    createChatClientObject(generateToken(userIdentity));
+    createChatClientObject(generateToken(userIdentity), '');
     res.send('+ getToken Sever Side Set ClientObject.');
 });
 app.get('/set', function (req, res) {
