@@ -690,7 +690,8 @@ function onMessageAdded(message) {
                 sayMessage('+ No HTTP GET response.');
                 httpResponseObject.send("+ No HTTP GET response.");
             } else {
-                sayMessage("HTTP GET response: " + theResponse);
+                sayMessage("+ Return HTTP response.");
+                debugMessage("+ HTTP GET response: " + theResponse);
                 httpResponseObject.send(theResponse);
             }
             httpResponseObject = '';
@@ -794,12 +795,14 @@ app.get('/http/get/*', function (request, res) {
     sayMessage('+ HTTP GET request.');
     sleep(1);
     if (httpRequestUri.endsWith(".xml")) {
-        httpResponseObject.header('Content-Type', ' text/xml');
+        httpResponseObject.header('Content-Type', 'text/xml');
+    } else if (httpRequestUri.endsWith(".html")) {
+        httpResponseObject.header('Content-Type', 'text/html');
     } else {
         httpResponseObject.header('Content-Type', 'text/plain');
     }
 
-    return;
+    // return;
 });
 
 // -----------------------------------------------------------------------------
