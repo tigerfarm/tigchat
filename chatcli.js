@@ -201,7 +201,7 @@ var setChannelListeners = "";
 var thisChatClient = "";
 var thisChatChannelName = "";
 var chatChannelDescription = "";
-let thisChannel = "";
+let thisChannelObject = "";
 
 // This is to count channel messages read. Needs work to initialize and maintain the count.
 // Needs to be reset when changing channels.
@@ -314,7 +314,7 @@ function getTokenSeverSide(userIdentity, createClientObject) {
         sayMessage("+ New token retrieved.");
         TOKEN_METHOD = TOKEN_METHOD_URL;
         if (createClientObject) {
-            createChatClientObject(newToken,'');
+            createChatClientObject(newToken, '');
         }
         return;
     });
@@ -352,7 +352,7 @@ function createChatClientObject(token, theChannel) {
             }
             if (theChannel !== '') {
                 console.log('+ Join Channel: ' + theChannel);
-                joinChatChannel(theChannel, '');
+                createChannelObject(theChannel, '', "subscribe");
             } else {
                 doPrompt();
             }
@@ -380,8 +380,8 @@ function onTokenAboutToExpire() {
 }
 
 // -----------------------------------------------------------------------------
-function joinChatChannel(chatChannelName, chatChannelDescription) {
-    debugMessage("joinChatChannel(" + chatChannelName + ", " + chatChannelDescription + ")");
+function createChannelObject(chatChannelName, chatChannelDescription, doSubscribe) {
+    debugMessage("createChannelObject(" + chatChannelName + ", " + chatChannelDescription + ", " + doSubscribe + ")");
     if (thisChatClient === "") {
         sayRequirement("Required: create a Chat Client.");
         doPrompt();
@@ -392,39 +392,28 @@ function joinChatChannel(chatChannelName, chatChannelDescription) {
         doPrompt();
         return;
     }
+    if (chatChannelDescription === "") {
+        chatChannelDescription = chatChannelName;
+    }
     // sayMessage("+ Join the channel: " + chatChannelName);
     thisChatClient.getChannelByUniqueName(chatChannelName)
             .then(function (channel) {
-                thisChannel = channel;
+                sayMessage("++ Channel exists: " + chatChannelName + ", " + channel.friendlyName);
+                // debugMessage("Channel Attributes: "+ " SID: " + channel.sid + " name: " + channel.friendlyName);
+                thisChannelObject = channel;
                 thisChatChannelName = chatChannelName;
-                debugMessage("Channel exists: " + chatChannelName + " : " + thisChannel);
-                joinChannel();
-                debugMessage("Channel Attributes: "
-                        // + channel.getAttributes()
-                        + " SID: " + channel.sid
-                        + " name: " + channel.friendlyName
-                        );
-                sayMessage('+ You have joined the channel: ' + chatChannelName);
-                if (sendMode === 0) {
-                    sayMessage("+ You are now in send mode.");
-                    thePromptPrefix = "+ Send, ";
-                    sendMode = 1;
-                }
-                doPrompt();
+                joinChannel(doSubscribe);
             })
             .catch(function () {
                 debugMessage("Channel doesn't exist, created the channel.");
-                if (chatChannelDescription === "") {
-                    chatChannelDescription = chatChannelName;
-                }
                 thisChatClient.createChannel({
                     uniqueName: chatChannelName,
                     friendlyName: chatChannelDescription
                 }).then(function (channel) {
                     sayMessage("++ Channel created: " + chatChannelName + ", " + chatChannelDescription);
-                    thisChannel = channel;
+                    thisChannelObject = channel;
                     thisChatChannelName = chatChannelName;
-                    joinChannel();
+                    joinChannel(doSubscribe);
                 }).catch(function (channel) {
                     sayMessage('-- Failed to create the channel: ' + channel);
                     // Following happened when the token had expired.
@@ -433,15 +422,14 @@ function joinChatChannel(chatChannelName, chatChannelDescription) {
             });
 }
 
-function joinChannel() {
-    debugMessage('joinChannel() ' + thisChannel.uniqueName);
-    thisChannel.join().then(function (channel) {
-        debugMessage('Joined channel as ' + userIdentity);
-        sayMessage('++ You have joined the channel: ' + thisChannel.friendlyName);
-        doCountZero();
-        doPrompt();
+function joinChannel(doSubscribe) {
+    sayMessage('joinChannel( ' + doSubscribe + ' ) ' + thisChannelObject.uniqueName);
+    thisChannelObject.join().then(function (channel) {
+        // New to the channel.
+        debugMessage('New to the channel as ' + userIdentity);
+        joinChannelCompleted(doSubscribe);
     }).catch(function (err) {
-        doCountZero();
+        // Not new to the channel, or there is an error.
         if (err.message === "Member already exists") {
             debugMessage("++ You already exist in the channel.");
         } else if (err.message === "Channel member limit exceeded") {
@@ -449,39 +437,52 @@ function joinChannel() {
             debugMessage("Join failed: Channel member limit exceeded.");
             sayMessage("- If you are not already a member of this channel, the join has failed.");
         } else {
-            debugMessage("- Join failed: " + thisChannel.uniqueName + ' :' + err.message + ":");
+            debugMessage("- Join failed: " + thisChannelObject.uniqueName + ' :' + err.message + ":");
             sayMessage("- Join failed: " + err.message);
         }
+        joinChannelCompleted(doSubscribe);
     });
-    // if (setChannelListeners === "") {
-    setChannelListnerFunctions();
-    // }
+}
+
+function joinChannelCompleted(doSubscribe) {
+    sayMessage('++ You have joined the channel: ' + thisChannelObject.friendlyName);
+    if (doSubscribe === "subscribe") {
+        subscribeToTheChannel();
+    }
+    doCountZero();
+    if (sendMode === 0) {
+        sayMessage("+ You are now in send mode.");
+        thePromptPrefix = "+ Send, ";
+        sendMode = 1;
+    }
+    doPrompt();
+}
+
+function subscribeToTheChannel() {
+    // Only set this once, else can cause issues when re-joining or joining other channels.
+    setChannelListeners = "joined";
+    sayMessage("++ You have subscribed to the channel event listeners.");
+    //
+    thisChannelObject.on('messageAdded', function (message) {
+        onMessageAdded(message);
+    });
 }
 
 function doCountZero() {
-    debugMessage("+ Called: doCountZero(): thisChannel.setNoMessagesConsumed();");
+    debugMessage("+ Called: doCountZero(): thisChannelObject.setNoMessagesConsumed();");
     totalMessages = 0;
-    thisChannel.setNoMessagesConsumed();
+    thisChannelObject.setNoMessagesConsumed();
 }
 
 function incCount() {
     totalMessages++;
     debugMessage('+ Increment Total Messages:' + totalMessages);
-    thisChannel.getMessages().then(function (messages) {
-        thisChannel.updateLastConsumedMessageIndex(totalMessages);
+    thisChannelObject.getMessages().then(function (messages) {
+        thisChannelObject.updateLastConsumedMessageIndex(totalMessages);
     });
 }
 
-function setChannelListnerFunctions() {
-    // Only set this once, else can cause issues when re-joining or joining other channels.
-    setChannelListeners = "joined";
-    debugMessage("+ Set channel event listeners.");
-    //
-    thisChannel.on('messageAdded', function (message) {
-        onMessageAdded(message);
-    });
-}
-
+// -----------------------------------------------------------------------------
 const RELAY_REST_API_GET_PREFIX = '/http/get';
 function onMessageAdded(message) {
     // Other message properties: message.sid, message.friendlyName
@@ -561,9 +562,9 @@ function deleteChannel(chatChannelName) {
     }
     sayMessage('+ Delete channel: ' + chatChannelName);
     thisChatClient.getChannelByUniqueName(chatChannelName).then(function (channel) {
-        thisChannel = channel;
-        debugMessage("Channel exists: " + chatChannelName + ", created by: " + thisChannel.createdBy);
-        thisChannel.delete().then(function (channel) {
+        thisChannelObject = channel;
+        debugMessage("Channel exists: " + chatChannelName + ", created by: " + thisChannelObject.createdBy);
+        thisChannelObject.delete().then(function (channel) {
             sayMessage('++ Channel deleted: ' + chatChannelName);
             if (chatChannelName === thisChatChannelName) {
                 thisChatChannelName = "";
@@ -571,10 +572,10 @@ function deleteChannel(chatChannelName) {
             doPrompt();
         }).catch(function (err) {
             // Not handled: SessionError: User unauthorized for command.
-            if (thisChannel.createdBy !== userIdentity) {
-                sayMessage("- Can only be deleted by the creator: " + thisChannel.createdBy);
+            if (thisChannelObject.createdBy !== userIdentity) {
+                sayMessage("- Can only be deleted by the creator: " + thisChannelObject.createdBy);
             } else {
-                debugMessage("- Delete failed: " + thisChannel.uniqueName);
+                debugMessage("- Delete failed: " + thisChannelObject.uniqueName);
                 sayMessage("- Delete failed: " + err);
             }
             doPrompt();
@@ -590,14 +591,14 @@ function deleteChannel(chatChannelName) {
 
 function listMembers() {
     debugMessage("listMembers()");
-    if (thisChannel === "") {
+    if (thisChannelObject === "") {
         sayRequirement("Required: join a channel.");
         doPrompt();
         return;
     }
-    var members = thisChannel.getMembers();
+    var members = thisChannelObject.getMembers();
     sayMessage("+ ------------------------------------------------------------------------------");
-    sayMessage("+ Members of channel: " + thisChannel.uniqueName);
+    sayMessage("+ Members of channel: " + thisChannelObject.uniqueName);
     members.then(function (currentMembers) {
         var i = 1;
         currentMembers.forEach(function (member) {
@@ -620,7 +621,7 @@ function listMessageHistory() {
         doPrompt();
         return;
     }
-    thisChannel.getMessages().then(function (messages) {
+    thisChannelObject.getMessages().then(function (messages) {
         totalMessages = messages.items.length;
         sayMessage('Total Messages: ' + totalMessages);
         sayMessage("+ -----------------------");
@@ -645,7 +646,7 @@ function listMessageHistory() {
                 });
             }
         }
-        thisChannel.updateLastConsumedMessageIndex(totalMessages);
+        thisChannelObject.updateLastConsumedMessageIndex(totalMessages);
         sayMessage('+ Total Messages: ' + totalMessages);
         doPrompt();
     });
@@ -659,7 +660,7 @@ function doSend(theCommand) {
     } else {
         commandLength = 'send'.length + 1;
         if (theCommand.length > commandLength) {
-            thisChannel.sendMessage(theCommand.substring(commandLength));
+            thisChannelObject.sendMessage(theCommand.substring(commandLength));
         } else {
             if (sendMode === 0) {
                 sayMessage("+ You are now in send mode.");
@@ -700,7 +701,7 @@ function doSendMedia(theCommand) {
             //  formData.append('contentType', 'application/x-www-form-urlencoded');
             //  formData.append('contentType', 'image/jpg');
             //  formData.append('media', fs.createReadStream(theMediaFile));
-            thisChatClient.getChannelBySid(thisChannel.sid).then(function (channel) {
+            thisChatClient.getChannelBySid(thisChannelObject.sid).then(function (channel) {
 
                 // The following gives: Error: Media content <Channel#SendMediaOptions> must contain non-empty contentType and media
                 // channel.sendMessage(formData);
@@ -719,7 +720,7 @@ function doSendMedia(theCommand) {
 
 function test0() {
     // Only form data send option allows the sending of a filename.
-    thisChatClient.getChannelBySid(thisChannel.sid).then(function (channel) {
+    thisChatClient.getChannelBySid(thisChannelObject.sid).then(function (channel) {
         channel.sendMessage({
             // contentType: 'application/x-www-form-urlencoded',
             contentType: 'image/jpg',
@@ -879,7 +880,7 @@ function runProgram(theCommand) {
 if (userIdentity !== "") {
     token = generateToken(userIdentity);
     if (token !== "") {
-        createChatClientObject(token,userJoinChannel);
+        createChatClientObject(token, userJoinChannel);
     }
 } else {
     firstInit = "initialized";
@@ -925,6 +926,18 @@ standard_input.on('data', function (inputString) {
         listMembers();
     } else if (theCommand === 'history') {
         listMessageHistory();
+    } else if (theCommand.startsWith('joinns')) {
+        // Join a channel but don't subscribe.
+        // joinns abc
+        commandLength = theCommand.length;
+        commandWordLength = 'joinns'.length + 1;
+        if (commandLength > commandWordLength) {
+            theChannel = theCommand.substring(commandWordLength, commandLength);
+            createChannelObject(theChannel, "", "NoSubscribe");
+        } else {
+            sayMessage("+ Syntax: joinns <channel>");
+            doPrompt();
+        }
     } else if (theCommand.startsWith('join')) {
         // join abc my new channel
         commandLength = theCommand.length;
@@ -939,7 +952,7 @@ standard_input.on('data', function (inputString) {
                 debugMessage("theChannel :" + theChannel + ":");
                 debugMessage("theChannelDescription :" + theChannelDescription + ":");
             }
-            joinChatChannel(theChannel, theChannelDescription);
+            createChannelObject(theChannel, theChannelDescription, "subscribe");
         } else {
             sayMessage("+ Syntax: join <channel> [description]");
             doPrompt();
@@ -977,7 +990,7 @@ standard_input.on('data', function (inputString) {
         var createClientObject = true;
         getTokenSeverSide(userIdentity, createClientObject);
     } else if (theCommand === 'generate') {
-        createChatClientObject(generateToken(userIdentity),'');
+        createChatClientObject(generateToken(userIdentity), '');
     } else if (theCommand === 'users') {
         listUsers();
     } else if (theCommand.startsWith('user')) {
