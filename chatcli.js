@@ -1,5 +1,15 @@
 // -----------------------------------------------------------------------------
-// Easy to use.
+// Easy to use. This program runs standalone. You can download it and run it.
+// 
+// Install required modules.
+//  $ npm install request
+//  $ npm install twilio
+//  $ npm install twilio-chat
+//  
+// Run the Chat command line program.
+//  $ node chatcli.js
+// Display the help message.
+//  + Command, Enter > help
 // 
 // ------------------------------
 // Setup to generate chat tokens:
