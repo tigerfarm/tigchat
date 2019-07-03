@@ -145,6 +145,7 @@ Commands:\n\
 ++ List public channels.\n\
 > join <channel>\n\
 > join <channel> [<description>]\n\
+> joinns <channel> (Join a channel but don't subscribe to the channel)\n\
 > members\n\
 ++ List channel members.\n\
 > history\n\
