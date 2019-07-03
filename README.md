@@ -90,6 +90,11 @@ Enter a Channel name, example: mychannel (same as the other client).
 
 Send messages between your clients.
 ````
+### Test the Chat command line program
+
+With the Chat program, you can get a token, and then join and subscribe to as many rooms as I want to monitor.
+Then, the program will receive incoming messages from the channels it is subscribed to.
+I can also re-join a channel that I am subscribed (note, without re-subscribing), and send messages.
 
 --------------------------------------------------------------------------------
 ## SMS Twilio Chat Gateway

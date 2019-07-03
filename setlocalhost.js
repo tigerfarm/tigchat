@@ -13,9 +13,9 @@
 console.log('-------------------------------------------------');
 console.log('+++ Setup Gateway Chat User.');
 //
-var httpHost = "http://localhost:8000/";
 var userIdentity = "relay";
 var theChannel = "relay";
+var httpHost = "http://localhost:8000/";
 //
 if (process.argv[2]) {
     userIdentity = process.argv[2];
@@ -24,11 +24,11 @@ if (process.argv[3]) {
     theChannel = process.argv[3];
 }
 if (process.argv[4]) {
-    theChannel = process.argv[4];
+    httpHost = process.argv[4];
 }
-console.log('+ Set httpHost:', httpHost);
 console.log('+ Set userIdentity:', userIdentity);
 console.log('+ Set theChannel:', theChannel);
+console.log('+ Set httpHost:', httpHost);
 //
 var request = require('request');
 function generate() {
