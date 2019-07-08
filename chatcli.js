@@ -189,9 +189,6 @@ if (userJoinChannel !== "") {
     console.log("+ User channel to join: " + userJoinChannel);
 }
 
-// $ npm install --save twilio-chat
-const Chat = require('twilio-chat');
-//
 var request = require('request');
 
 // Chat presence.
@@ -322,6 +319,9 @@ function getTokenSeverSide(userIdentity, createClientObject) {
 }
 
 // -----------------------------------------------------------------------------
+// $ npm install --save twilio-chat
+const Chat = require('twilio-chat');
+//
 function createChatClientObject(token, theChannel) {
     if (userIdentity === "") {
         sayRequirement("Required: user identity for creating a chat object.");
