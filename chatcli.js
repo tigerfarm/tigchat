@@ -437,6 +437,8 @@ function joinChannel(doSubscribe) {
             // To handle this properly, would need to list the channel members to see if join has truly failed.
             debugMessage("Join failed: Channel member limit exceeded.");
             sayMessage("- If you are not already a member of this channel, the join has failed.");
+        } else if (err.message === "Webhook cancelled processing of command") {
+            sayMessage("++ You have joined the channel.");
         } else {
             debugMessage("- Join failed: " + thisChannelObject.uniqueName + ' :' + err.message + ":");
             sayMessage("- Join failed: " + err.message);

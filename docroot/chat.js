@@ -54,7 +54,7 @@ function createChatClientObject() {
             // 
             // Documentation:
             //   https://www.twilio.com/docs/chat/tutorials/chat-application-node-express?code-sample=code-initialize-the-chat-client-9&code-language=Node.js&code-sdk-version=default
-            // thisChatClient.on('channelAdded', $.throttle(tc.loadChannelList));
+            thisChatClient.on('channelAdded', onChannelAdded);
             // thisChatClient.on('channelRemoved', $.throttle(tc.loadChannelList));
             // thisChatClient.on('tokenExpired', onTokenExpiring);
             //
@@ -64,6 +64,13 @@ function createChatClientObject() {
     }).fail(function () {
         logger("- Error refreshing the token and creating the chat client object.");
     });
+}
+
+function onChannelAdded(aChannel) {
+    // https://media.twiliocdn.com/sdk/android/chat/releases/2.0.6/docs/com/twilio/chat/ChatClientListener.html
+    // Called when the current user is added to a channel.
+    logger("onChannelAdded, user added to the  channel: " + aChannel.friendlyName);
+    // Note, joined but not subscribed.
 }
 
 function onTokenAboutToExpire() {
@@ -138,6 +145,9 @@ function joinChannel() {
     }).catch(function (err) {
         if (err.message === "Member already exists") {
             addChatMessage("++ You already exist in the channel.");
+            setButtons("join");
+        } else if (err.message === "Webhook cancelled processing of command") {
+            addChatMessage("++ You have joined the channel.");
             setButtons("join");
         } else {
             logger("- Join failed: " + thisChannel.uniqueName + ' :' + err.message + ":");
@@ -378,7 +388,7 @@ function setButtons(activity) {
             $('#btn-listallmessages').prop('disabled', true);
             break;
         case "join":
-            $('#btn-createChatClient').prop('disabled', false);
+            $('#btn-createChatClient').prop('disabled', true);
             //
             $('#btn-list').prop('disabled', false);
             $('#btn-join').prop('disabled', false);
