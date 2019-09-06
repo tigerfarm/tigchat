@@ -1,10 +1,18 @@
 // -----------------------------------------------------------------------------
 // Documentation:      https://www.twilio.com/docs/chat/initializing-sdk-clients
-// Documentation:      https://www.twilio.com/docs/chat/channelstotalMessages
+// Documentation:      https://www.twilio.com/docs/chat/rest/user-channels#properties
+//                     https://www.twilio.com/docs/chat/consumption-horizon
 // Documentation:      https://www.twilio.com/docs/chat/rest/channels
 // Server side delete: https://www.twilio.com/docs/chat/rest/channels
 // Message properties: https://www.twilio.com/docs/chat/rest/messages
 
+// Members:            https://www.twilio.com/docs/chat/rest/member-resource
+// Membersproperties:  https://www.twilio.com/docs/chat/rest/member-resource#member-properties
+// 
+// Users:              https://www.twilio.com/docs/chat/rest/user-resource
+// User properties:    https://www.twilio.com/docs/chat/rest/user-resource#user-properties
+// User property, attributes: The JSON string that stores application-specific data.
+// 
 // -----------------------------------------------------------------------------
 let thisChatClient = "";
 let thisChannel;
