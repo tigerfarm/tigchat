@@ -1,15 +1,12 @@
 {
   "name": "Sample Chat Web Server Application",
   "description": "This application is a sample chat web application.",
-  "repository": "https://github.com/tigerfarm/tigchatweb",
+  "repository": "https://github.com/tigerfarm/tigchat",
   "logo": "http://tigerfarmpress.com/images/topImgLeft.jpg",
   "keywords": ["node", "express", "heroku", "Twilio"],
     "env": {
         "ACCOUNT_SID": {
             "description": "Your Twilio account Sid. You view it here: https://console.twilio.com"
-        },
-        "AUTH_TOKEN": {
-            "description": "Your Twilio account auth token. You view it here: https://console.twilio.com"
         },
         "CHAT_SERVICE_SID": {
             "description": "Chat service SID. You can create it here: https://www.twilio.com/console/chat/dashboard"
