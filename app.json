@@ -6,20 +6,19 @@
   "keywords": ["node", "express", "heroku", "Twilio"],
     "env": {
         "ACCOUNT_SID": {
-            "description": "Your Twilio accountSid. You view it here: https://console.twilio.com",
-            "value": "accountSid"
+            "description": "Your Twilio account Sid. You view it here: https://console.twilio.com"
+        },
+        "AUTH_TOKEN": {
+            "description": "Your Twilio account auth token. You view it here: https://console.twilio.com"
         },
         "CHAT_SERVICE_SID": {
-            "description": "Chat service SID. You can create it here: https://www.twilio.com/console/chat/dashboard",
-            "value": "apiKeySid"
+            "description": "Chat service SID. You can create it here: https://www.twilio.com/console/chat/dashboard"
         },
         "CHAT_API_KEY": {
-            "description": "API Keys are revokable credentials for the Twilio API. You can create it here: https://www.twilio.com/console/chat/runtime/api-keys",
-            "value": "apiKeySid"
+            "description": "API Keys are revokable credentials for the Twilio API. You can create it here: https://www.twilio.com/console/chat/runtime/api-keys"
         },
         "CHAT_API_KEY_SECRET": {
-            "description": "API Keys are revokable credentials for the Twilio API.",
-            "value": "apiKeySecret"
+            "description": "API Keys are revokable credentials for the Twilio API."
         }
     }
 }
