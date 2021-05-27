@@ -4,7 +4,7 @@
 //                     https://www.twilio.com/docs/chat/consumption-horizon
 // Documentation:      https://www.twilio.com/docs/chat/rest/channels
 // Server side delete: https://www.twilio.com/docs/chat/rest/channels
-// Message properties: https://www.twilio.com/docs/chat/rest/messages
+// Message properties: https://www.twilio.com/docs/chat/rest/message-resource
 
 // Members:            https://www.twilio.com/docs/chat/rest/member-resource
 // Membersproperties:  https://www.twilio.com/docs/chat/rest/member-resource#member-properties
@@ -165,7 +165,7 @@ function joinChannel() {
     // -------------------------------------------------------------------------
     // Set channel event listeners.
     thisChannel.on('messageAdded', function (message) {
-        addChatMessage("> " + message.author + " : " + message.channel.uniqueName + " : " + message.body);
+        addChatMessage("> " + message.author + " : " + message.channel.uniqueName + " : " + message.body + message.);
         // IMe9c317dc4a1f4276bfeb1286535271d5 : david : undefined : +16508668188 : back to you
         // addChatMessage("> " + message.sid + " : "+ message.author + " : "+ message.friendlyName
         //         + " : " + message.channel.uniqueName + " : " + message.body);
